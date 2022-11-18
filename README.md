@@ -20,6 +20,7 @@ cmake --build . --target install --config Release
 ## TODO
 
 * Support UTF-8
+* Support all new-line formats (CRLF, CR, LF)
 * Join multiple text files (you can specify a file that contains a list of files to be joined)
 
 ## Chat group
