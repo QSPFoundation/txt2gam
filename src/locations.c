@@ -235,7 +235,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
 {
     char *name;
     QSP_CHAR *locCode, *line, *pos, quot = 0;
-    int locStartLen, locEndLen, bufSize, codeLen, quotsCount = 0, curLoc = 0;
+    int locStartLen, locEndLen, bufSize, codeLen = 0, quotsCount = 0, curLoc = 0;
     QSP_BOOL isInLoc = QSP_FALSE;
     locStartLen = qspStrLen(locStart);
     locEndLen = qspStrLen(locEnd);

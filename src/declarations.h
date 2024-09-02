@@ -68,7 +68,7 @@
         #define QSP_BTOWC(a) qspDirectConvertUC(a, qspCP1251ToUnicodeTable)
     #endif
 
-    #define QSP_VER QSP_FMT("0.2.0")
+    #define QSP_VER QSP_FMT("0.2.1")
     #define QSP_LOCALE "" /* system locale */
 
     #define QSP_TRUE 1

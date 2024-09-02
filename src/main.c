@@ -250,23 +250,24 @@ int main(int argc, char **argv)
     }
     qspLocs = 0;
     qspLocsCount = 0;
+    isErr = QSP_FALSE;
     switch (workMode)
     {
         case QSP_EXTRACT_STRINGS:
         case QSP_EXTRACT_QSTRINGS:
             if (isErr = !qspExportStrings(argv[1], argv[2], locStart, locEnd, workMode == QSP_EXTRACT_QSTRINGS, isUCS2))
-                printf("Strings extracting failed!\n");
+                printf("String extraction has failed!\n");
             break;
         case QSP_ENCODE_INTO_GAME:
             do
             {
                 if (isErr = !qspOpenQuestFromTextFile(argv[1], locStart, locEnd))
                 {
-                    printf("Loading text file failed!\n");
+                    printf("Loading text file has failed!\n");
                     break;
                 }
                 if (isErr = !qspSaveGameFile(argv[2], isOldFormat, isUCS2, passwd))
-                    printf("Saving game failed!\n");
+                    printf("Saving game has failed!\n");
             } while (0);
             break;
         case QSP_DECODE_INTO_TEXT:
@@ -278,7 +279,7 @@ int main(int argc, char **argv)
                     break;
                 }
                 if (isErr = !qspSaveQuestToTextFile(argv[2], locStart, locEnd, isUCS2))
-                    printf("Saving text file failed!\n");
+                    printf("Saving text file has failed!\n");
             } while (0);
             break;
     }
