@@ -22,7 +22,7 @@
 
     #define QSP_CODREMOV 5
 
-    extern wchar_t qspCP1251ToUnicodeTable[];
+    extern wchar_t qspCP1251ToUCS2LETable[];
 
     /* External functions */
     wchar_t qspDirectConvertUC(char, wchar_t *);
