@@ -1,0 +1,6 @@
+#ifndef TXT2GAM_CONFIG_H
+#define TXT2GAM_CONFIG_H
+
+#define TXT2GAM_VER_STR "@txt2gam_VERSION@"
+
+#endif

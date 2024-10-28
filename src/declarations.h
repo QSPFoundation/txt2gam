@@ -21,6 +21,8 @@
 #include <string.h>
 #include <wchar.h>
 
+#include "txt2gam_config.h"
+
 /* MEMWATCH */
 
 #ifdef _DEBUG
@@ -68,7 +70,7 @@
         #define QSP_BTOWC(a) qspDirectConvertUC(a, qspCP1251ToUnicodeTable)
     #endif
 
-    #define QSP_VER QSP_FMT("0.2.1")
+    #define QSP_VER QSP_FMT(TXT2GAM_VER_STR)
     #define QSP_LOCALE "" /* system locale */
 
     #define QSP_TRUE 1
