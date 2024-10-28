@@ -158,7 +158,7 @@ void ShowHelp()
     printf("  a, A - ANSI mode, default is Unicode (UCS-2 / UTF-16) mode\n");
     printf("  o, O - Save game in old format, default is new format\n");
     temp = qspFromQSPString(QSP_STARTLOC);
-    printf("  s[string], S[string] - 'Begin of loc' prefix, default is '%s'\n", temp);
+    printf("  s[string], S[string] - 'Start of loc' prefix, default is '%s'\n", temp);
     free(temp);
     temp = qspFromQSPString(QSP_ENDLOC);
     printf("  e[string], E[string] - 'End of loc' prefix, default is '%s'\n", temp);
