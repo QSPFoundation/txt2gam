@@ -108,7 +108,7 @@ char *qspQSPToGameString(QSP_CHAR *s, QSP_BOOL isUCS2, QSP_BOOL isCode)
         {
             while (--len >= 0)
             {
-                uCh = QSP_BTOWC(s[len]);
+                uCh = QSP_TO_GAME_UC(s[len]);
                 if (uCh == QSP_CODREMOV)
                     uCh = (unsigned short)-QSP_CODREMOV;
                 else
@@ -119,7 +119,7 @@ char *qspQSPToGameString(QSP_CHAR *s, QSP_BOOL isUCS2, QSP_BOOL isCode)
         else
         {
             while (--len >= 0)
-                ptr[len] = QSP_BTOWC(s[len]);
+                ptr[len] = QSP_TO_GAME_UC(s[len]);
         }
     }
     else
@@ -129,7 +129,7 @@ char *qspQSPToGameString(QSP_CHAR *s, QSP_BOOL isUCS2, QSP_BOOL isCode)
         {
             while (--len >= 0)
             {
-                ch = QSP_FROM_OS_CHAR(s[len]);
+                ch = QSP_TO_GAME_SB(s[len]);
                 if (ch == QSP_CODREMOV)
                     ch = -QSP_CODREMOV;
                 else
@@ -140,7 +140,7 @@ char *qspQSPToGameString(QSP_CHAR *s, QSP_BOOL isUCS2, QSP_BOOL isCode)
         else
         {
             while (--len >= 0)
-                ret[len] = QSP_FROM_OS_CHAR(s[len]);
+                ret[len] = QSP_TO_GAME_SB(s[len]);
         }
     }
     return ret;
@@ -165,13 +165,13 @@ QSP_CHAR *qspGameToQSPString(char *s, QSP_BOOL isUCS2, QSP_BOOL isCoded)
                     uCh = QSP_CODREMOV;
                 else
                     uCh += QSP_CODREMOV;
-                ret[len] = QSP_WCTOB(uCh);
+                ret[len] = QSP_FROM_GAME_UC(uCh);
             }
         }
         else
         {
             while (--len >= 0)
-                ret[len] = QSP_WCTOB(ptr[len]);
+                ret[len] = QSP_FROM_GAME_UC(ptr[len]);
         }
     }
     else
@@ -185,13 +185,13 @@ QSP_CHAR *qspGameToQSPString(char *s, QSP_BOOL isUCS2, QSP_BOOL isCoded)
                     ch = QSP_CODREMOV;
                 else
                     ch += QSP_CODREMOV;
-                ret[len] = QSP_TO_OS_CHAR(ch);
+                ret[len] = QSP_FROM_GAME_SB(ch);
             }
         }
         else
         {
             while (--len >= 0)
-                ret[len] = QSP_TO_OS_CHAR(s[len]);
+                ret[len] = QSP_FROM_GAME_SB(s[len]);
         }
     }
     return ret;

@@ -48,10 +48,10 @@
         #define QSP_WCSTOMBS wcstombs
         #define QSP_MBSTOWCSLEN(a) mbstowcs(0, a, 0)
         #define QSP_MBSTOWCS mbstowcs
-        #define QSP_FROM_OS_CHAR(a) qspReverseConvertUC(a, qspCP1251ToUCS2LETable)
-        #define QSP_TO_OS_CHAR(a) qspDirectConvertUC(a, qspCP1251ToUCS2LETable)
-        #define QSP_WCTOB
-        #define QSP_BTOWC
+        #define QSP_TO_GAME_SB(a) qspReverseConvertUC(a, qspCP1251ToUCS2LETable)
+        #define QSP_TO_GAME_UC(a) (a)
+        #define QSP_FROM_GAME_SB(a) qspDirectConvertUC(a, qspCP1251ToUCS2LETable)
+        #define QSP_FROM_GAME_UC(a) (a)
     #else
         typedef char QSP_CHAR;
         #define QSP_FMT(x) x
@@ -64,10 +64,10 @@
         #define QSP_WCSTOMBS strncpy
         #define QSP_MBSTOWCSLEN strlen
         #define QSP_MBSTOWCS strncpy
-        #define QSP_FROM_OS_CHAR
-        #define QSP_TO_OS_CHAR
-        #define QSP_WCTOB(a) qspReverseConvertUC(a, qspCP1251ToUCS2LETable)
-        #define QSP_BTOWC(a) qspDirectConvertUC(a, qspCP1251ToUCS2LETable)
+        #define QSP_TO_GAME_SB(a) (a)
+        #define QSP_TO_GAME_UC(a) qspDirectConvertUC(a, qspCP1251ToUCS2LETable)
+        #define QSP_FROM_GAME_SB(a) (a)
+        #define QSP_FROM_GAME_UC(a) qspReverseConvertUC(a, qspCP1251ToUCS2LETable)
     #endif
 
     #define QSP_VER QSP_FMT(TXT2GAM_VER_STR)
