@@ -23,7 +23,7 @@ cmake -S . -B $REL_BUILD_DIR \
   -DCMAKE_BUILD_TYPE=Release
 
 cmake --build $REL_BUILD_DIR --parallel $(sysctl -n hw.ncpu)
-cmake --install $REL_BUILD_DIR --component Main --strip
+cmake --install $REL_BUILD_DIR --strip
 cpack -B $REL_BUILD_DIR --config $REL_BUILD_DIR/CPackConfig.cmake
 
 # Move to dist
