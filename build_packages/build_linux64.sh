@@ -4,6 +4,7 @@ set -e
 
 sudo apt-get update
 sudo apt-get install -y \
+  file \
   rpm
 
 REL_BUILD_DIR=./build_packages/linux64
