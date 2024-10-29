@@ -30,7 +30,8 @@
     #define QSP_LEN(x) (sizeof(x) / sizeof(QSP_CHAR) - 1)
 
     /* External functions */
-    int qspAddText(QSP_CHAR **, QSP_CHAR *, int, int, QSP_BOOL);
+    int qspAddCharToBuffer(QSP_CHAR **buf, QSP_CHAR ch, int strLen, int *bufSize);
+    int qspAddText(QSP_CHAR **dest, QSP_CHAR *val, int destLen, int valLen, QSP_BOOL toCreate);
     QSP_BOOL qspIsInList(QSP_CHAR *, QSP_CHAR);
     QSP_CHAR *qspSkipSpaces(QSP_CHAR *);
     QSP_CHAR *qspDelSpc(QSP_CHAR *);

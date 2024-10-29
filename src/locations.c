@@ -22,19 +22,7 @@
 QSPLocation *qspLocs = 0;
 int qspLocsCount = 0;
 
-static int qspAddCharToBuffer(QSP_CHAR **curStr, QSP_CHAR ch, int *bufSize, int strLen);
 static QSP_BOOL qspCheckQuest(char **strs, int count, QSP_BOOL isUCS2, QSP_CHAR *password);
-
-static int qspAddCharToBuffer(QSP_CHAR **curStr, QSP_CHAR ch, int *bufSize, int strLen)
-{
-    if (++strLen >= *bufSize)
-    {
-        *bufSize += 2048;
-        *curStr = (QSP_CHAR *)realloc(*curStr, *bufSize * sizeof(QSP_CHAR));
-    }
-    (*curStr)[strLen - 1] = ch;
-    return strLen;
-}
 
 static QSP_BOOL qspCheckQuest(char **strs, int count, QSP_BOOL isUCS2, QSP_CHAR *password)
 {
@@ -145,14 +133,14 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
                     if (*(data + 1) == quot)
                     {
                         if (isGetQStrings && quotsCount)
-                            strLen = qspAddCharToBuffer(&curStr, *data, &bufSize, strLen);
+                            strLen = qspAddCharToBuffer(&curStr, *data, strLen, &bufSize);
                         ++data;
                     }
                     else
                         quot = 0;
                 }
                 if (quot || (isGetQStrings && quotsCount))
-                    strLen = qspAddCharToBuffer(&curStr, *data, &bufSize, strLen);
+                    strLen = qspAddCharToBuffer(&curStr, *data, strLen, &bufSize);
                 else
                 {
                     if (strLen)
@@ -190,7 +178,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
                 else if (qspIsInList(QSP_QUOTS, *data))
                     quot = *data;
                 if (isGetQStrings && isAddToString)
-                    strLen = qspAddCharToBuffer(&curStr, *data, &bufSize, strLen);
+                    strLen = qspAddCharToBuffer(&curStr, *data, strLen, &bufSize);
             }
             ++data;
         }
@@ -264,14 +252,14 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                         break;
                 }
             }
-            codeLen = (isFill ? qspAddCharToBuffer(&locCode, *data, &bufSize, codeLen) : codeLen + 1);
+            codeLen = (isFill ? qspAddCharToBuffer(&locCode, *data, codeLen, &bufSize) : codeLen + 1);
             if (quot)
             {
                 if (*data == quot)
                 {
                     if (*(data + 1) == quot)
                     {
-                        codeLen = (isFill ? qspAddCharToBuffer(&locCode, *data, &bufSize, codeLen) : codeLen + 1);
+                        codeLen = (isFill ? qspAddCharToBuffer(&locCode, *data, codeLen, &bufSize) : codeLen + 1);
                         ++data;
                     }
                     else

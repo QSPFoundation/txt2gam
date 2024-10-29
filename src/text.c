@@ -19,12 +19,23 @@
 
 static QSP_CHAR *qspStrEnd(QSP_CHAR *);
 
-int qspAddText(QSP_CHAR **dest, QSP_CHAR *val, int destLen, int valLen, QSP_BOOL isCreate)
+int qspAddCharToBuffer(QSP_CHAR **buf, QSP_CHAR ch, int strLen, int *bufSize)
+{
+    if (++strLen >= *bufSize)
+    {
+        *bufSize += 2048;
+        *buf = (QSP_CHAR *)realloc(*buf, *bufSize * sizeof(QSP_CHAR));
+    }
+    (*buf)[strLen - 1] = ch;
+    return strLen;
+}
+
+int qspAddText(QSP_CHAR **dest, QSP_CHAR *val, int destLen, int valLen, QSP_BOOL toCreate)
 {
     int ret;
     QSP_CHAR *destPtr;
     if (valLen < 0) valLen = (int)QSP_STRLEN(val);
-    if (!isCreate && *dest)
+    if (!toCreate && *dest)
     {
         if (destLen < 0) destLen = (int)QSP_STRLEN(*dest);
         ret = destLen + valLen;
