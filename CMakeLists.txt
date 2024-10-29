@@ -53,11 +53,27 @@ set(TXT2GAM_SOURCES
 	src/memwatch.c
 	src/text.c
 )
-add_executable(txt2gam ${TXT2GAM_SOURCES})
-target_compile_definitions(txt2gam PRIVATE _UNICODE)
 if (WIN32)
+	add_executable(txt2gam WIN32 ${TXT2GAM_SOURCES})
 	target_compile_definitions(txt2gam PRIVATE _CRT_SECURE_NO_WARNINGS)
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT txt2gam)
+elseif (APPLE)
+	add_executable(txt2gam MACOSX_BUNDLE ${TXT2GAM_SOURCES})
+	set_target_properties(txt2gam PROPERTIES
+			MACOSX_BUNDLE_BUNDLE_NAME "TXT2GAM"
+			MACOSX_BUNDLE_BUNDLE_VERSION "${CMAKE_PROJECT_VERSION}"
+			MACOSX_BUNDLE_COPYRIGHT "(c) QSP Foundation"
+			MACOSX_BUNDLE_GUI_IDENTIFIER "org.qsp.txt2gam"
+			MACOSX_BUNDLE_INFO_STRING "TXT2GAM"
+			MACOSX_BUNDLE_LONG_VERSION_STRING "${CMAKE_PROJECT_VERSION}"
+			MACOSX_BUNDLE_SHORT_VERSION_STRING "${CMAKE_PROJECT_VERSION}")
+elseif (UNIX)
+	add_executable(txt2gam ${TXT2GAM_SOURCES})
+else()
+	message(FATAL_ERROR "Platform is not supported")
 endif()
+
+target_compile_definitions(txt2gam PRIVATE _UNICODE)
 if (SPEC_PASS)
 	target_compile_definitions(txt2gam PRIVATE SPEC_PASS=${SPEC_PASS})
 endif()
@@ -66,7 +82,49 @@ target_link_options(txt2gam PRIVATE ${PROJECT_LINKER_FLAGS})
 
 # Installation
 
-install(TARGETS txt2gam)
+if (WIN32)
+	set(BUNDLE_NAME txt2gam.exe)
+	set(BINDIR ${CMAKE_INSTALL_BINDIR})
+	set(LIBDIR ${CMAKE_INSTALL_LIBDIR})
+	set(RLIBDIR ${CMAKE_INSTALL_BINDIR})
+	set(HEADERDIR ${CMAKE_INSTALL_INCLUDEDIR})
+	set(DATADIR ${CMAKE_INSTALL_BINDIR})
+	set(INSTALL_RPATH "")
+elseif (APPLE)
+	set(BUNDLE_NAME txt2gam.app)
+	set(BINDIR ${BUNDLE_NAME}/Contents/MacOS)
+	set(LIBDIR ${BUNDLE_NAME}/Contents/Frameworks)
+	set(RLIBDIR ${BUNDLE_NAME}/Contents/Frameworks)
+	set(HEADERDIR ${BUNDLE_NAME}/Contents/Frameworks)
+	set(DATADIR ${BUNDLE_NAME}/Contents/Resources)
+	set(INSTALL_RPATH "@loader_path;@loader_path/../Frameworks")
+elseif (UNIX)
+	set(BUNDLE_NAME txt2gam)
+	set(BINDIR ${CMAKE_INSTALL_BINDIR})
+	set(LIBDIR ${CMAKE_INSTALL_LIBDIR})
+	set(RLIBDIR ${CMAKE_INSTALL_LIBDIR})
+	set(HEADERDIR ${CMAKE_INSTALL_INCLUDEDIR})
+	set(DATADIR ${CMAKE_INSTALL_DATADIR}/txt2gam)
+	set(INSTALL_RPATH "$ORIGIN;$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+else()
+	message(FATAL_ERROR "Platform is not supported")
+endif()
+
+set_target_properties(txt2gam PROPERTIES INSTALL_RPATH "${INSTALL_RPATH}")
+install(TARGETS txt2gam
+		RUNTIME DESTINATION ${BINDIR}
+		LIBRARY DESTINATION ${RLIBDIR}
+		ARCHIVE DESTINATION ${LIBDIR}
+		PRIVATE_HEADER DESTINATION ${HEADERDIR}
+		PUBLIC_HEADER DESTINATION ${HEADERDIR}
+		BUNDLE DESTINATION .)
+
+if (APPLE)
+	set(DEP_DIRS "${CMAKE_INSTALL_PREFIX}/${RLIBDIR}")
+	install(CODE
+			"include(BundleUtilities)
+			fixup_bundle(\"${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}\" \"\" \"${DEP_DIRS}\")")
+endif()
 
 # Packaging
 
@@ -94,7 +152,7 @@ set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
 set(CPACK_PACKAGE_EXECUTABLES txt2gam "TXT2GAM")
 set(CPACK_CREATE_DESKTOP_LINKS txt2gam)
-set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_INSTALL_BINDIR}\\txt2gam.exe")
+set(CPACK_NSIS_INSTALLED_ICON_NAME "${BINDIR}\\txt2gam.exe")
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
 set(CPACK_NSIS_MODIFY_PATH ON)
 set(CPACK_NSIS_MANIFEST_DPI_AWARE ON)
