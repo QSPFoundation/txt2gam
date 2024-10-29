@@ -183,7 +183,7 @@ void ShowHelp()
     char *temp = qspFromQSPString(QSP_VER);
     printf("TXT2GAM utility, ver. %s\n", temp);
     free(temp);
-    printf("Using:\n");
+    printf("Usage:\n");
     printf("  txt2gam [input file] [output file] [options]\n");
     printf("Options:\n");
     printf("  a, A - ANSI mode, default is Unicode (UTF-8, UCS-2/UTF-16) mode\n");
@@ -205,6 +205,7 @@ void ShowHelp()
     printf("  txt2gam file.txt gamefile.qsp pMyPassword\n");
     printf("  txt2gam file.txt gamefile.qsp\n");
     printf("  txt2gam file.txt gamefile.qsp a\n");
+    printf("  txt2gam gamefile.qsp file.txt d pMyPassword\n");
     printf("  txt2gam file.txt gamefile.qsp o pMyPassword\n");
     printf("  txt2gam file.txt gamefile.qsp o e@ pMyPassword\n");
     printf("  txt2gam file.txt gamefile.qsp o \"pMy Password\"\n");
@@ -212,7 +213,6 @@ void ShowHelp()
     printf("  txt2gam file.txt gamefile.qsp o\n");
     printf("  txt2gam file.txt gamefile.qsp o e@\n");
     printf("  txt2gam file.txt gamefile.qsp s@ e~\n");
-    printf("  txt2gam file.txt gamefile.qsp s@ E~ o\n");
     printf("  txt2gam file.txt strsfile.txt t a\n");
 }
 
