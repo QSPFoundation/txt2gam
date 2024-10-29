@@ -312,7 +312,7 @@ char *qspQSPStringToUTF8(QSP_CHAR *s)
 #endif
     QSP_CHAR *ptr;
     unsigned int codepoint = 0;
-    int len = 0, maxLen = (int)QSP_STRLEN(s) * sizeof(QSP_CHAR); // we're very conservative here
+    int len = 0, maxLen = (int)QSP_STRLEN(s) * 4; /* we're very conservative here */
     char *ret = (char *)malloc(maxLen + 1);
     ret[maxLen] = 0;
     for (ptr = s; *ptr; ++ptr)
@@ -341,7 +341,7 @@ char *qspQSPStringToUTF8(QSP_CHAR *s)
             }
             else
             {
-                // we don't support this case, keeping it for the future
+                /* We don't support this case, keeping it for the future */
                 ret[len++] = (char)(0xf0 | ((codepoint >> 18) & 0x07));
                 ret[len++] = (char)(0x80 | ((codepoint >> 12) & 0x3f));
                 ret[len++] = (char)(0x80 | ((codepoint >> 6) & 0x3f));
@@ -360,7 +360,7 @@ QSP_CHAR *qspUTF8ToQSPString(char *s)
     return 0;
 #endif
     unsigned int codepoint = 0;
-    int len = 0, maxLen = (int)strlen(s); // we're very conservative here
+    int len = 0, maxLen = (int)strlen(s); /* we're very conservative here */
     QSP_CHAR *ret = (QSP_CHAR *)malloc((maxLen + 1) * sizeof(QSP_CHAR));
     ret[maxLen] = 0;
     while (*s)

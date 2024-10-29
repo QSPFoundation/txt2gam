@@ -47,7 +47,7 @@ static QSP_BOOL qspLoadTextFile(char *file, QSP_BOOL isUnicode, QSP_CHAR **data)
     if ((unsigned char)resBuf[0] == (unsigned char)TXT2GAM_UCS2BOM[0]
         && (unsigned char)resBuf[1] == (unsigned char)TXT2GAM_UCS2BOM[1])
     {
-        resBuf += 2;
+        resBuf += 2; /* skip BOM */
         encoding = QSP_UCS2;
     }
     else if (resBuf[0] && !resBuf[1])
@@ -56,7 +56,7 @@ static QSP_BOOL qspLoadTextFile(char *file, QSP_BOOL isUnicode, QSP_CHAR **data)
         && (unsigned char)resBuf[1] == (unsigned char)TXT2GAM_UTF8BOM[1]
         && (unsigned char)resBuf[2] == (unsigned char)TXT2GAM_UTF8BOM[2])
     {
-        resBuf += 3;
+        resBuf += 3; /* skip BOM */
         encoding = QSP_UTF8;
     }
     else
