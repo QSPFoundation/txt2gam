@@ -1,5 +1,7 @@
 # TXT2GAM
 
+Please check [Releases](https://github.com/QSPFoundation/txt2gam/releases) section.
+
 ## Linux & MacOS build
 
 ```bash
