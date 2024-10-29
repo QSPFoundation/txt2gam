@@ -42,11 +42,11 @@
     extern int qspLocsCount;
 
     /* External functions */
-    void qspCreateWorld(int);
-    int qspGetLocsStrings(QSP_CHAR *, QSP_CHAR *, QSP_CHAR *, QSP_BOOL, QSP_CHAR **);
-    int qspOpenTextData(QSP_CHAR *, QSP_CHAR *, QSP_CHAR *, QSP_BOOL);
-    char *qspSaveQuestToText(QSP_CHAR *, QSP_CHAR *, QSP_BOOL, int *);
-    QSP_BOOL qspOpenQuest(char *, int, QSP_CHAR *);
-    char *qspSaveQuest(QSP_BOOL, QSP_BOOL, QSP_CHAR *, int *);
+    void qspCreateWorld(int locsCount);
+    QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL isGetQStrings);
+    int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL isFill);
+    char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUCS2, QSP_CHAR *passwd, int *dataLen);
+    QSP_BOOL qspOpenQuest(char *data, int dataSize, QSP_CHAR *password);
+    QSP_CHAR *qspSaveQuestAsText(QSP_CHAR *locStart, QSP_CHAR *locEnd);
 
 #endif

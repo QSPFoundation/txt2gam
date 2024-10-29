@@ -70,6 +70,14 @@
         #define QSP_FROM_GAME_UC(a) qspReverseConvertUC(a, qspCP1251ToUCS2LETable)
     #endif
 
+    enum
+    {
+        QSP_UNKNOWN,
+        QSP_ANSI,
+        QSP_UTF8,
+        QSP_UCS2
+    };
+
     #define QSP_VER QSP_FMT(TXT2GAM_VER_STR)
     #define QSP_LOCALE "" /* system locale */
 

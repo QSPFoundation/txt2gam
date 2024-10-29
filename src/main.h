@@ -22,7 +22,8 @@
 
     #define QSP_STARTLOC QSP_FMT("#")
     #define QSP_ENDLOC QSP_FMT("---")
-    #define TXT2GAM_BOM "\xFF\xFE"
+    #define TXT2GAM_UCS2BOM "\xFF\xFE"
+    #define TXT2GAM_UTF8BOM "\xEF\xBB\xBF"
 
     enum Mode
     {

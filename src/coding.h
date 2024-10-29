@@ -35,5 +35,7 @@
     int qspGameCodeWriteVal(char **, int, QSP_CHAR *, QSP_BOOL, QSP_BOOL);
     int qspGameCodeWriteIntValLine(char **, int, int, QSP_BOOL, QSP_BOOL);
     int qspGameCodeWriteValLine(char **, int, QSP_CHAR *, QSP_BOOL, QSP_BOOL);
+    char *qspQSPStringToUTF8(QSP_CHAR *s);
+    QSP_CHAR *qspUTF8ToQSPString(char *s);
 
 #endif

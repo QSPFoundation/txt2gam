@@ -304,3 +304,93 @@ int qspGameCodeWriteValLine(char **s, int len, QSP_CHAR *val, QSP_BOOL isUCS2, Q
     free(temp);
     return len;
 }
+
+char *qspQSPStringToUTF8(QSP_CHAR *s)
+{
+#ifndef _UNICODE
+    return 0;
+#endif
+    QSP_CHAR *ptr;
+    unsigned int codepoint = 0;
+    int len = 0, maxLen = (int)QSP_STRLEN(s) * sizeof(QSP_CHAR); // we're very conservative here
+    char *ret = (char *)malloc(maxLen + 1);
+    ret[maxLen] = 0;
+    for (ptr = s; *ptr; ++ptr)
+    {
+        if (*ptr >= 0xd800 && *ptr <= 0xdbff)
+            codepoint = ((*ptr - 0xd800) << 10) + 0x10000;
+        else
+        {
+            if (*ptr >= 0xdc00 && *ptr <= 0xdfff)
+                codepoint |= *ptr - 0xdc00;
+            else
+                codepoint = *ptr;
+
+            if (codepoint <= 0x7f)
+                ret[len++] = (char)codepoint;
+            else if (codepoint <= 0x7ff)
+            {
+                ret[len++] = (char)(0xc0 | ((codepoint >> 6) & 0x1f));
+                ret[len++] = (char)(0x80 | (codepoint & 0x3f));
+            }
+            else if (codepoint <= 0xffff)
+            {
+                ret[len++] = (char)(0xe0 | ((codepoint >> 12) & 0x0f));
+                ret[len++] = (char)(0x80 | ((codepoint >> 6) & 0x3f));
+                ret[len++] = (char)(0x80 | (codepoint & 0x3f));
+            }
+            else
+            {
+                // we don't support this case, keeping it for the future
+                ret[len++] = (char)(0xf0 | ((codepoint >> 18) & 0x07));
+                ret[len++] = (char)(0x80 | ((codepoint >> 12) & 0x3f));
+                ret[len++] = (char)(0x80 | ((codepoint >> 6) & 0x3f));
+                ret[len++] = (char)(0x80 | (codepoint & 0x3f));
+            }
+            codepoint = 0;
+        }
+    }
+    ret[len] = 0;
+    return ret;
+}
+
+QSP_CHAR *qspUTF8ToQSPString(char *s)
+{
+#ifndef _UNICODE
+    return 0;
+#endif
+    unsigned int codepoint = 0;
+    int len = 0, maxLen = (int)strlen(s); // we're very conservative here
+    QSP_CHAR *ret = (QSP_CHAR *)malloc((maxLen + 1) * sizeof(QSP_CHAR));
+    ret[maxLen] = 0;
+    while (*s)
+    {
+        unsigned char ch = (unsigned char)*s;
+        if (ch <= 0x7f)
+            codepoint = ch;
+        else if (ch <= 0xbf)
+            codepoint = (codepoint << 6) | (ch & 0x3f);
+        else if (ch <= 0xdf)
+            codepoint = ch & 0x1f;
+        else if (ch <= 0xef)
+            codepoint = ch & 0x0f;
+        else
+            codepoint = ch & 0x07;
+        ++s;
+        if ((*s & 0xc0) != 0x80 && codepoint <= 0x10ffff)
+        {
+            if (sizeof(QSP_CHAR) > 2)
+                ret[len++] = (QSP_CHAR)codepoint;
+            else if (codepoint > 0xffff)
+            {
+                codepoint -= 0x10000;
+                ret[len++] = (QSP_CHAR)(0xd800 + (codepoint >> 10));
+                ret[len++] = (QSP_CHAR)(0xdc00 + (codepoint & 0x03ff));
+            }
+            else if (codepoint < 0xd800 || codepoint >= 0xe000)
+                ret[len++] = (QSP_CHAR)codepoint;
+        }
+    }
+    ret[len] = 0;
+    return ret;
+}
