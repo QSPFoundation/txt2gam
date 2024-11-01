@@ -100,12 +100,12 @@ void qspCreateWorld(int locsCount)
 
 QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL isGetQStrings)
 {
-    QSP_CHAR *name, *curStr, *line, *pos, *buf = 0, quot = 0;
-    int locStartLen, locEndLen, bufSize = 1024, strLen = 0, len = 0, quotsCount = 0;
+    QSP_CHAR *name, *curStr, *line, *pos, *res = 0, quot = 0;
+    int locStartLen, locEndLen, curBufSize = 1024, curStrLen = 0, resLen = 0, quotsCount = 0;
     QSP_BOOL isAddToString, isInLoc = QSP_FALSE;
     locStartLen = qspStrLen(locStart);
     locEndLen = qspStrLen(locEnd);
-    curStr = (QSP_CHAR *)malloc(bufSize * sizeof(QSP_CHAR));
+    curStr = (QSP_CHAR *)malloc(curBufSize * sizeof(QSP_CHAR));
     while (*data)
     {
         if (isInLoc)
@@ -133,22 +133,22 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
                     if (*(data + 1) == quot)
                     {
                         if (isGetQStrings && quotsCount)
-                            strLen = qspAddCharToBuffer(&curStr, *data, strLen, &bufSize);
+                            curStrLen = qspAddCharToBuffer(&curStr, *data, curStrLen, &curBufSize);
                         ++data;
                     }
                     else
                         quot = 0;
                 }
                 if (quot || (isGetQStrings && quotsCount))
-                    strLen = qspAddCharToBuffer(&curStr, *data, strLen, &bufSize);
+                    curStrLen = qspAddCharToBuffer(&curStr, *data, curStrLen, &curBufSize);
                 else
                 {
-                    if (strLen)
+                    if (curStrLen)
                     {
-                        curStr[strLen] = 0;
-                        len = qspAddText(&buf, curStr, len, strLen, QSP_FALSE);
-                        len = qspAddText(&buf, QSP_STRSDELIM, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
-                        strLen = 0;
+                        curStr[curStrLen] = 0;
+                        resLen = qspAddText(&res, curStr, resLen, curStrLen, QSP_FALSE);
+                        resLen = qspAddText(&res, QSP_STRSDELIM, resLen, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
+                        curStrLen = 0;
                     }
                 }
             }
@@ -165,12 +165,12 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
                         if (isGetQStrings && !quotsCount)
                         {
                             isAddToString = QSP_FALSE;
-                            if (strLen)
+                            if (curStrLen)
                             {
-                                curStr[strLen] = 0;
-                                len = qspAddText(&buf, curStr, len, strLen, QSP_FALSE);
-                                len = qspAddText(&buf, QSP_STRSDELIM, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
-                                strLen = 0;
+                                curStr[curStrLen] = 0;
+                                resLen = qspAddText(&res, curStr, resLen, curStrLen, QSP_FALSE);
+                                resLen = qspAddText(&res, QSP_STRSDELIM, resLen, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
+                                curStrLen = 0;
                             }
                         }
                     }
@@ -178,7 +178,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
                 else if (qspIsInList(QSP_QUOTS, *data))
                     quot = *data;
                 if (isGetQStrings && isAddToString)
-                    strLen = qspAddCharToBuffer(&curStr, *data, strLen, &bufSize);
+                    curStrLen = qspAddCharToBuffer(&curStr, *data, curStrLen, &curBufSize);
             }
             ++data;
         }
@@ -198,10 +198,10 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
                 }
                 else
                     name = qspDelSpc(line);
-                len = qspAddText(&buf, QSP_FMT("Location: "), len, -1, QSP_FALSE);
-                len = qspAddText(&buf, name, len, -1, QSP_FALSE);
+                resLen = qspAddText(&res, QSP_FMT("Location: "), resLen, -1, QSP_FALSE);
+                resLen = qspAddText(&res, name, resLen, -1, QSP_FALSE);
                 free(name);
-                len = qspAddText(&buf, QSP_STRSDELIM, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
+                resLen = qspAddText(&res, QSP_STRSDELIM, resLen, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
                 if (pos)
                 {
                     data = pos;
@@ -215,14 +215,14 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
         }
     }
     free(curStr);
-    return buf;
+    return res;
 }
 
 int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL isFill)
 {
     char *name;
     QSP_CHAR *locCode, *line, *pos, quot = 0;
-    int locStartLen, locEndLen, bufSize, codeLen = 0, quotsCount = 0, curLoc = 0;
+    int locStartLen, locEndLen, locBufSize, locCodeLen = 0, quotsCount = 0, curLoc = 0;
     QSP_BOOL isInLoc = QSP_FALSE;
     locStartLen = qspStrLen(locStart);
     locEndLen = qspStrLen(locEnd);
@@ -230,15 +230,15 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
     {
         if (isInLoc)
         {
-            if (!quot && !quotsCount && (!codeLen || qspIsEqual(data, QSP_STRSDELIM, QSP_LEN(QSP_STRSDELIM))))
+            if (!quot && !quotsCount && (!locCodeLen || qspIsEqual(data, QSP_STRSDELIM, QSP_LEN(QSP_STRSDELIM))))
             {
-                line = qspSkipSpaces(codeLen ? data + QSP_LEN(QSP_STRSDELIM) : data);
+                line = qspSkipSpaces(locCodeLen ? data + QSP_LEN(QSP_STRSDELIM) : data);
                 if (qspIsEqual(line, locEnd, locEndLen))
                 {
                     isInLoc = QSP_FALSE;
                     if (isFill)
                     {
-                        locCode[codeLen] = 0;
+                        locCode[locCodeLen] = 0;
                         qspLocs[curLoc].OnVisit = locCode;
                     }
                     ++curLoc;
@@ -252,14 +252,14 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                         break;
                 }
             }
-            codeLen = (isFill ? qspAddCharToBuffer(&locCode, *data, codeLen, &bufSize) : codeLen + 1);
+            locCodeLen = (isFill ? qspAddCharToBuffer(&locCode, *data, locCodeLen, &locBufSize) : locCodeLen + 1);
             if (quot)
             {
                 if (*data == quot)
                 {
                     if (*(data + 1) == quot)
                     {
-                        codeLen = (isFill ? qspAddCharToBuffer(&locCode, *data, codeLen, &bufSize) : codeLen + 1);
+                        locCodeLen = (isFill ? qspAddCharToBuffer(&locCode, *data, locCodeLen, &locBufSize) : locCodeLen + 1);
                         ++data;
                     }
                     else
@@ -286,7 +286,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
             if (qspIsEqual(line, locStart, locStartLen))
             {
                 isInLoc = QSP_TRUE;
-                codeLen = 0;
+                locCodeLen = 0;
                 if (isFill)
                 {
                     line += locStartLen;
@@ -303,8 +303,8 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                     printf("Location: %s\n", name);
                     free(name);
 
-                    bufSize = 1024;
-                    locCode = (QSP_CHAR *)malloc(bufSize * sizeof(QSP_CHAR));
+                    locBufSize = 1024;
+                    locCode = (QSP_CHAR *)malloc(locBufSize * sizeof(QSP_CHAR));
                 }
             }
             if (pos)
@@ -317,7 +317,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
     {
         if (isFill)
         {
-            locCode[codeLen] = 0;
+            locCode[locCodeLen] = 0;
             qspLocs[curLoc].OnVisit = locCode;
         }
         ++curLoc;
