@@ -19,6 +19,45 @@
 
 static QSP_CHAR *qspStrEnd(QSP_CHAR *);
 
+static QSP_CHAR *qspStrEnd(QSP_CHAR *s)
+{
+    while (*s) ++s;
+    return s;
+}
+
+void qspFormatLineEndings(QSP_CHAR *data)
+{
+    QSP_CHAR *src = data, *dest = data;
+    while (*src)
+    {
+        if (*src == QSP_FMT('\r'))
+        {
+            if (*(src + 1) == QSP_FMT('\n'))
+            {
+                *dest = QSP_NEWLINE;
+                src += 2;
+            }
+            else
+            {
+                *dest = QSP_NEWLINE;
+                ++src;
+            }
+        }
+        else if (*src == QSP_FMT('\n'))
+        {
+            *dest = QSP_NEWLINE;
+            ++src;
+        }
+        else
+        {
+            *dest = *src;
+            ++src;
+        }
+        ++dest;
+    }
+    *dest = 0;
+}
+
 int qspAddCharToBuffer(QSP_CHAR **buf, QSP_CHAR ch, int strLen, int *bufSize)
 {
     if (++strLen >= *bufSize)
@@ -28,6 +67,24 @@ int qspAddCharToBuffer(QSP_CHAR **buf, QSP_CHAR ch, int strLen, int *bufSize)
     }
     (*buf)[strLen - 1] = ch;
     return strLen;
+}
+
+int qspAddTextToBuffer(QSP_CHAR **buf, QSP_CHAR *val, int valLen, int strLen, int *bufSize)
+{
+    int ret;
+    QSP_CHAR *destPtr = *buf;
+    if (valLen < 0) valLen = (int)QSP_STRLEN(val);
+    ret = strLen + valLen;
+    if (ret >= *bufSize)
+    {
+        *bufSize = ret + 2048;
+        destPtr = (QSP_CHAR *)realloc(*buf, *bufSize * sizeof(QSP_CHAR));
+        *buf = destPtr;
+    }
+    destPtr += strLen;
+    QSP_STRNCPY(destPtr, val, valLen);
+    destPtr[valLen] = 0;
+    return ret;
 }
 
 int qspAddText(QSP_CHAR **dest, QSP_CHAR *val, int destLen, int valLen, QSP_BOOL toCreate)
@@ -64,12 +121,6 @@ QSP_BOOL qspIsInList(QSP_CHAR *list, QSP_CHAR ch)
 QSP_CHAR *qspSkipSpaces(QSP_CHAR *s)
 {
     while (qspIsInList(QSP_SPACES, *s)) ++s;
-    return s;
-}
-
-static QSP_CHAR *qspStrEnd(QSP_CHAR *s)
-{
-    while (*s) ++s;
     return s;
 }
 

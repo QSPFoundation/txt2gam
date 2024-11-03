@@ -75,7 +75,12 @@ static QSP_BOOL qspLoadTextFile(char *file, QSP_BOOL isUnicode, QSP_CHAR **data)
         break;
     }
     free(buf);
-    if (*data) return QSP_TRUE;
+
+    if (*data)
+    {
+        qspFormatLineEndings(*data);
+        return QSP_TRUE;
+    }
     return QSP_FALSE;
 }
 
