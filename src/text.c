@@ -78,7 +78,7 @@ int qspAddTextToBuffer(QSP_CHAR **buf, QSP_CHAR *val, int valLen, int strLen, in
     if (ret >= *bufSize)
     {
         *bufSize = ret + 2048;
-        destPtr = (QSP_CHAR *)realloc(*buf, *bufSize * sizeof(QSP_CHAR));
+        destPtr = (QSP_CHAR *)realloc(destPtr, *bufSize * sizeof(QSP_CHAR));
         *buf = destPtr;
     }
     destPtr += strLen;
