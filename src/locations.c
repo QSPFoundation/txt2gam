@@ -101,7 +101,7 @@ void qspCreateWorld(int locsCount)
 QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL isGetQStrings)
 {
     QSP_CHAR *name, *curStr, *line, *pos, *res = 0, quot = 0;
-    int locStartLen, locEndLen, curBufSize = 1024, curStrLen = 0, resLen = 0, quotsCount = 0;
+    int locStartLen, locEndLen, curBufSize = 1024, curStrLen = 0, resLen = 0, quotsCount = 0, strsCount = 0, locsCount = 0;
     QSP_BOOL isAddToString, isInLoc = QSP_FALSE;
     locStartLen = qspStrLen(locStart);
     locEndLen = qspStrLen(locEnd);
@@ -154,6 +154,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
                         resLen = qspAddText(&res, curStr, resLen, curStrLen, QSP_FALSE);
                         resLen = qspAddText(&res, QSP_STRSDELIM, resLen, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
                         curStrLen = 0;
+                        ++strsCount;
                     }
                 }
             }
@@ -176,6 +177,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
                                 resLen = qspAddText(&res, curStr, resLen, curStrLen, QSP_FALSE);
                                 resLen = qspAddText(&res, QSP_STRSDELIM, resLen, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
                                 curStrLen = 0;
+                                ++strsCount;
                             }
                         }
                     }
@@ -198,6 +200,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
             pos = QSP_STRCHR(line, QSP_NEWLINE);
             if (qspIsEqual(line, locStart, locStartLen))
             {
+                ++locsCount;
                 isInLoc = QSP_TRUE;
                 line += locStartLen;
                 if (pos)
@@ -208,6 +211,11 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
                 }
                 else
                     name = qspDelSpc(line);
+                if (resLen)
+                {
+                    /* Add a new line to separate locations */
+                    resLen = qspAddText(&res, QSP_STRSDELIM, resLen, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
+                }
                 resLen = qspAddText(&res, QSP_FMT("Location: "), resLen, -1, QSP_FALSE);
                 resLen = qspAddText(&res, name, resLen, -1, QSP_FALSE);
                 free(name);
@@ -225,6 +233,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
         }
     }
     free(curStr);
+    printf("Extracted %d strings from %d locations\n", strsCount, locsCount);
     return res;
 }
 
