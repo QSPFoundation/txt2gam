@@ -73,7 +73,7 @@ int qspAddTextToBuffer(QSP_CHAR **buf, QSP_CHAR *val, int valLen, int strLen, in
 {
     int ret;
     QSP_CHAR *destPtr = *buf;
-    if (valLen < 0) valLen = (int)QSP_STRLEN(val);
+    if (valLen < 0) valLen = qspStrLen(val);
     ret = strLen + valLen;
     if (ret >= *bufSize)
     {
@@ -82,7 +82,7 @@ int qspAddTextToBuffer(QSP_CHAR **buf, QSP_CHAR *val, int valLen, int strLen, in
         *buf = destPtr;
     }
     destPtr += strLen;
-    QSP_STRNCPY(destPtr, val, valLen);
+    qspStrNCopy(destPtr, val, valLen);
     destPtr[valLen] = 0;
     return ret;
 }
@@ -91,10 +91,10 @@ int qspAddText(QSP_CHAR **dest, QSP_CHAR *val, int destLen, int valLen, QSP_BOOL
 {
     int ret;
     QSP_CHAR *destPtr;
-    if (valLen < 0) valLen = (int)QSP_STRLEN(val);
+    if (valLen < 0) valLen = qspStrLen(val);
     if (!toCreate && *dest)
     {
-        if (destLen < 0) destLen = (int)QSP_STRLEN(*dest);
+        if (destLen < 0) destLen = qspStrLen(*dest);
         ret = destLen + valLen;
         destPtr = (QSP_CHAR *)realloc(*dest, (ret + 1) * sizeof(QSP_CHAR));
         *dest = destPtr;
@@ -106,7 +106,7 @@ int qspAddText(QSP_CHAR **dest, QSP_CHAR *val, int destLen, int valLen, QSP_BOOL
         destPtr = (QSP_CHAR *)malloc((ret + 1) * sizeof(QSP_CHAR));
         *dest = destPtr;
     }
-    QSP_STRNCPY(destPtr, val, valLen);
+    qspStrNCopy(destPtr, val, valLen);
     destPtr[valLen] = 0;
     return ret;
 }
@@ -131,9 +131,16 @@ QSP_CHAR *qspDelSpc(QSP_CHAR *s)
     while (begin < end && qspIsInList(QSP_SPACES, *(end - 1))) --end;
     len = (int)(end - begin);
     str = (QSP_CHAR *)malloc((len + 1) * sizeof(QSP_CHAR));
-    QSP_STRNCPY(str, begin, len);
+    qspStrNCopy(str, begin, len);
     str[len] = 0;
     return str;
+}
+
+QSP_CHAR *qspNewStr(QSP_CHAR *s)
+{
+    int len = qspStrLen(s);
+    QSP_CHAR *str = (QSP_CHAR *)malloc((len + 1) * sizeof(QSP_CHAR));
+    return qspStrCopy(str, s);
 }
 
 int qspStrLen(QSP_CHAR *str)
@@ -141,6 +148,21 @@ int qspStrLen(QSP_CHAR *str)
     QSP_CHAR *bos = str;
     while (*str) ++str;
     return (int)(str - bos);
+}
+
+QSP_BOOL qspIsEmpty(QSP_CHAR *str)
+{
+    return !(*str);
+}
+
+QSP_CHAR *qspStrChr(QSP_CHAR *str, QSP_CHAR ch)
+{
+    while (*str)
+    {
+        if (*str == ch) return str;
+        ++str;
+    }
+    return 0;
 }
 
 QSP_CHAR *qspStrStr(QSP_CHAR *str, QSP_CHAR *strSearch)

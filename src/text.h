@@ -35,20 +35,23 @@
     int qspAddCharToBuffer(QSP_CHAR **buf, QSP_CHAR ch, int strLen, int *bufSize);
     int qspAddTextToBuffer(QSP_CHAR **buf, QSP_CHAR *val, int valLen, int strLen, int *bufSize);
     int qspAddText(QSP_CHAR **dest, QSP_CHAR *val, int destLen, int valLen, QSP_BOOL toCreate);
-    QSP_BOOL qspIsInList(QSP_CHAR *, QSP_CHAR);
-    QSP_CHAR *qspSkipSpaces(QSP_CHAR *);
-    QSP_CHAR *qspDelSpc(QSP_CHAR *);
-    int qspStrLen(QSP_CHAR *);
-    QSP_CHAR *qspStrStr(QSP_CHAR *, QSP_CHAR *);
-    QSP_CHAR *qspStrCopy(QSP_CHAR *, QSP_CHAR *);
-    QSP_CHAR *qspStrNCopy(QSP_CHAR *, QSP_CHAR *, int);
-    QSP_CHAR *qspReplaceText(QSP_CHAR *, QSP_CHAR *, QSP_CHAR *);
-    int qspStrsComp(QSP_CHAR *, QSP_CHAR *);
-    QSP_BOOL qspIsEqual(QSP_CHAR *, QSP_CHAR *, int);
-    int qspSplitStr(QSP_CHAR *, QSP_CHAR *, QSP_CHAR ***);
-    void qspFreeStrs(void **, int);
-    QSP_BOOL qspIsDigit(QSP_CHAR);
-    int qspStrToNum(QSP_CHAR *, QSP_BOOL *);
-    QSP_CHAR *qspNumToStr(QSP_CHAR *, int);
+    QSP_BOOL qspIsInList(QSP_CHAR *list, QSP_CHAR ch);
+    QSP_CHAR *qspSkipSpaces(QSP_CHAR *s);
+    QSP_CHAR *qspDelSpc(QSP_CHAR *s);
+    QSP_CHAR *qspNewStr(QSP_CHAR *s);
+    int qspStrLen(QSP_CHAR *str);
+    QSP_BOOL qspIsEmpty(QSP_CHAR *str);
+    QSP_CHAR *qspStrChr(QSP_CHAR *str, QSP_CHAR ch);
+    QSP_CHAR *qspStrStr(QSP_CHAR *str, QSP_CHAR *strSearch);
+    QSP_CHAR *qspStrCopy(QSP_CHAR *strDest, QSP_CHAR *strSource);
+    QSP_CHAR *qspStrNCopy(QSP_CHAR *strDest, QSP_CHAR *strSource, int maxLen);
+    QSP_CHAR *qspReplaceText(QSP_CHAR *txt, QSP_CHAR *searchTxt, QSP_CHAR *repTxt);
+    int qspStrsComp(QSP_CHAR *str1, QSP_CHAR *str2);
+    QSP_BOOL qspIsEqual(QSP_CHAR *str1, QSP_CHAR *str2, int maxLen);
+    int qspSplitStr(QSP_CHAR *str, QSP_CHAR *delim, QSP_CHAR ***res);
+    void qspFreeStrs(void **strs, int count);
+    QSP_BOOL qspIsDigit(QSP_CHAR ch);
+    int qspStrToNum(QSP_CHAR *s, QSP_BOOL *isValid);
+    QSP_CHAR *qspNumToStr(QSP_CHAR *buf, int val);
 
 #endif

@@ -16,6 +16,7 @@
 */
 
 #include "locations.h"
+#include "locdata.h"
 #include "text.h"
 #include "coding.h"
 
@@ -89,10 +90,11 @@ void qspCreateWorld(int locsCount)
         qspLocs[i].Name = 0;
         qspLocs[i].Desc = 0;
         qspLocs[i].OnVisit = 0;
+        qspLocs[i].ActionsCount = 0;
         for (j = 0; j < QSP_MAXACTIONS; ++j)
         {
-            qspLocs[i].Actions[j].Desc = 0;
             qspLocs[i].Actions[j].Image = 0;
+            qspLocs[i].Actions[j].Desc = 0;
             qspLocs[i].Actions[j].Code = 0;
         }
     }
@@ -116,7 +118,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
                 if (qspIsEqual(line, locEnd, locEndLen))
                 {
                     isInLoc = QSP_FALSE;
-                    pos = QSP_STRCHR(line + locEndLen, QSP_NEWLINE);
+                    pos = qspStrChr(line + locEndLen, QSP_NEWLINE);
                     if (pos)
                     {
                         data = pos + 1;
@@ -197,7 +199,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
         else
         {
             line = qspSkipSpaces(data);
-            pos = QSP_STRCHR(line, QSP_NEWLINE);
+            pos = qspStrChr(line, QSP_NEWLINE);
             if (qspIsEqual(line, locStart, locStartLen))
             {
                 ++locsCount;
@@ -258,10 +260,13 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                     if (isFill)
                     {
                         locCode[locCodeLen] = 0;
-                        qspLocs[curLoc].OnVisit = locCode;
+                        if (qspExtractLocationData(locCode, qspLocs + curLoc))
+                            free(locCode);
+                        else
+                            qspLocs[curLoc].OnVisit = locCode;
                     }
                     ++curLoc;
-                    pos = QSP_STRCHR(line + locEndLen, QSP_NEWLINE);
+                    pos = qspStrChr(line + locEndLen, QSP_NEWLINE);
                     if (pos)
                     {
                         data = pos + 1;
@@ -311,7 +316,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
         else
         {
             line = qspSkipSpaces(data);
-            pos = QSP_STRCHR(line, QSP_NEWLINE);
+            pos = qspStrChr(line, QSP_NEWLINE);
             if (qspIsEqual(line, locStart, locStartLen))
             {
                 isInLoc = QSP_TRUE;
@@ -347,7 +352,10 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
         if (isFill)
         {
             locCode[locCodeLen] = 0;
-            qspLocs[curLoc].OnVisit = locCode;
+            if (qspExtractLocationData(locCode, qspLocs + curLoc))
+                free(locCode);
+            else
+                qspLocs[curLoc].OnVisit = locCode;
         }
         ++curLoc;
     }
@@ -362,7 +370,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
 
 char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUCS2, QSP_CHAR *passwd, int *dataLen)
 {
-    int i, j, len;
+    int i, j, len, actsCount;
     char *name, *buf = 0;
     if (isOldFormat)
     {
@@ -385,12 +393,37 @@ char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUCS2, QSP_CHAR *passwd, int 
         free(name);
 
         len = qspGameCodeWriteValLine(&buf, len, qspLocs[i].Name, isUCS2, QSP_TRUE);
-        len = qspGameCodeWriteValLine(&buf, len, 0, isUCS2, QSP_FALSE);
+        len = qspGameCodeWriteValLine(&buf, len, qspLocs[i].Desc, isUCS2, QSP_TRUE);
         len = qspGameCodeWriteValLine(&buf, len, qspLocs[i].OnVisit, isUCS2, QSP_TRUE);
+
         if (isOldFormat)
-            for (j = 0; j < 40; ++j) len = qspGameCodeWriteValLine(&buf, len, 0, isUCS2, QSP_FALSE);
+        {
+            actsCount = qspLocs[i].ActionsCount < 20 ? qspLocs[i].ActionsCount : 20;
+            for (j = 0; j < actsCount; ++j)
+            {
+                len = qspGameCodeWriteValLine(&buf, len, qspLocs[i].Actions[j].Desc, isUCS2, QSP_TRUE);
+                len = qspGameCodeWriteValLine(&buf, len, qspLocs[i].Actions[j].Code, isUCS2, QSP_TRUE);
+            }
+        }
         else
-            len = qspGameCodeWriteIntValLine(&buf, len, 0, isUCS2, QSP_TRUE);
+        {
+            actsCount = 0;
+            for (j = 0; j < qspLocs[i].ActionsCount; ++j)
+            {
+                if (!qspLocs[i].Actions[j].Desc)
+                    break;
+                if (qspIsEmpty(qspLocs[i].Actions[j].Desc))
+                    break;
+                ++actsCount;
+            }
+            len = qspGameCodeWriteIntValLine(&buf, len, actsCount, isUCS2, QSP_TRUE);
+            for (j = 0; j < actsCount; ++j)
+            {
+                len = qspGameCodeWriteValLine(&buf, len, qspLocs[i].Actions[j].Image, isUCS2, QSP_TRUE);
+                len = qspGameCodeWriteValLine(&buf, len, qspLocs[i].Actions[j].Desc, isUCS2, QSP_TRUE);
+                len = qspGameCodeWriteValLine(&buf, len, qspLocs[i].Actions[j].Code, isUCS2, QSP_TRUE);
+            }
+        }
     }
 
     printf("%d locations were saved\n", qspLocsCount);
@@ -440,6 +473,7 @@ QSP_BOOL qspOpenQuest(char *data, int dataSize, QSP_CHAR *password)
             actsCount = qspStrToNum(buf, 0);
             free(buf);
         }
+        qspLocs[i].ActionsCount = actsCount;
         for (j = 0; j < actsCount; ++j)
         {
             qspLocs[i].Actions[j].Image = (isOldFormat ? 0 : qspGameToQSPString(strs[ind++], isUCS2, QSP_TRUE));
@@ -472,7 +506,7 @@ QSP_CHAR *qspSaveQuestAsText(QSP_CHAR *locStart, QSP_CHAR *locEnd)
         len = qspAddText(&buf, QSP_STRSDELIM, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
 
         /* Write main description of the location */
-        if (qspLocs[i].Desc && qspStrLen(qspLocs[i].Desc))
+        if (qspLocs[i].Desc && !qspIsEmpty(qspLocs[i].Desc))
         {
             temp = qspReplaceText(qspLocs[i].Desc, QSP_FMT("'"), QSP_FMT("''"));
             linesCount = qspSplitStr(temp, QSP_STRSDELIM, &tempStrs);
@@ -481,19 +515,19 @@ QSP_CHAR *qspSaveQuestAsText(QSP_CHAR *locStart, QSP_CHAR *locEnd)
             {
                 for (j = 0; j < linesCount - 1; ++j)
                 {
-                    if (qspStrLen(tempStrs[j]))
+                    if (qspIsEmpty(tempStrs[j]))
+                    {
+                        len = qspAddText(&buf, QSP_FMT("*NL"), len, -1, QSP_FALSE);
+                    }
+                    else
                     {
                         len = qspAddText(&buf, QSP_FMT("*PL '"), len, -1, QSP_FALSE);
                         len = qspAddText(&buf, tempStrs[j], len, -1, QSP_FALSE);
                         len = qspAddText(&buf, QSP_FMT("'"), len, -1, QSP_FALSE);
                     }
-                    else
-                    {
-                        len = qspAddText(&buf, QSP_FMT("*NL"), len, -1, QSP_FALSE);
-                    }
                     len = qspAddText(&buf, QSP_STRSDELIM, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
                 }
-                if (qspStrLen(tempStrs[linesCount - 1]))
+                if (!qspIsEmpty(tempStrs[linesCount - 1]))
                 {
                     len = qspAddText(&buf, QSP_FMT("*P '"), len, -1, QSP_FALSE);
                     len = qspAddText(&buf, tempStrs[linesCount - 1], len, -1, QSP_FALSE);
@@ -504,45 +538,47 @@ QSP_CHAR *qspSaveQuestAsText(QSP_CHAR *locStart, QSP_CHAR *locEnd)
             qspFreeStrs((void **)tempStrs, linesCount);
         }
         /* Write actions */
-        for (j = 0; j < QSP_MAXACTIONS; ++j)
+        for (j = 0; j < qspLocs[i].ActionsCount; ++j)
         {
-            if (qspLocs[i].Actions[j].Desc)
+            if (!qspLocs[i].Actions[j].Desc)
+                break;
+            if (qspIsEmpty(qspLocs[i].Actions[j].Desc))
+                break;
+
+            /* Write action header */
+            len = qspAddText(&buf, QSP_FMT("ACT '"), len, -1, QSP_FALSE);
+            temp = qspReplaceText(qspLocs[i].Actions[j].Desc, QSP_FMT("'"), QSP_FMT("''"));
+            len = qspAddText(&buf, temp, len, -1, QSP_FALSE);
+            free(temp);
+            len = qspAddText(&buf, QSP_FMT("'"), len, -1, QSP_FALSE);
+
+            if (qspLocs[i].Actions[j].Image && !qspIsEmpty(qspLocs[i].Actions[j].Image))
             {
-                /* Write action header */
-                len = qspAddText(&buf, QSP_FMT("ACT '"), len, -1, QSP_FALSE);
-                temp = qspReplaceText(qspLocs[i].Actions[j].Desc, QSP_FMT("'"), QSP_FMT("''"));
+                len = qspAddText(&buf, QSP_FMT(", '"), len, -1, QSP_FALSE);
+                temp = qspReplaceText(qspLocs[i].Actions[j].Image, QSP_FMT("'"), QSP_FMT("''"));
                 len = qspAddText(&buf, temp, len, -1, QSP_FALSE);
                 free(temp);
                 len = qspAddText(&buf, QSP_FMT("'"), len, -1, QSP_FALSE);
-
-                if (qspLocs[i].Actions[j].Image && qspStrLen(qspLocs[i].Actions[j].Image))
-                {
-                    len = qspAddText(&buf, QSP_FMT(", '"), len, -1, QSP_FALSE);
-                    temp = qspReplaceText(qspLocs[i].Actions[j].Image, QSP_FMT("'"), QSP_FMT("''"));
-                    len = qspAddText(&buf, temp, len, -1, QSP_FALSE);
-                    free(temp);
-                    len = qspAddText(&buf, QSP_FMT("'"), len, -1, QSP_FALSE);
-                }
-                len = qspAddText(&buf, QSP_FMT(":"), len, -1, QSP_FALSE);
-                len = qspAddText(&buf, QSP_STRSDELIM, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
-
-                /* Write action code */
-                if (qspLocs[i].Actions[j].Code && qspStrLen(qspLocs[i].Actions[j].Code))
-                {
-                    linesCount = qspSplitStr(qspLocs[i].Actions[j].Code, QSP_STRSDELIM, &tempStrs);
-                    for (k = 0; k < linesCount; ++k)
-                    {
-                        len = qspAddText(&buf, QSP_FMT("\t"), len, -1, QSP_FALSE);
-                        len = qspAddText(&buf, tempStrs[k], len, -1, QSP_FALSE);
-                        len = qspAddText(&buf, QSP_STRSDELIM, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
-                    }
-                    qspFreeStrs((void **)tempStrs, linesCount);
-                }
-
-                /* Write action footer */
-                len = qspAddText(&buf, QSP_FMT("END"), len, -1, QSP_FALSE);
-                len = qspAddText(&buf, QSP_STRSDELIM, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
             }
+            len = qspAddText(&buf, QSP_FMT(":"), len, -1, QSP_FALSE);
+            len = qspAddText(&buf, QSP_STRSDELIM, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
+
+            /* Write action code */
+            if (qspLocs[i].Actions[j].Code && !qspIsEmpty(qspLocs[i].Actions[j].Code))
+            {
+                linesCount = qspSplitStr(qspLocs[i].Actions[j].Code, QSP_STRSDELIM, &tempStrs);
+                for (k = 0; k < linesCount; ++k)
+                {
+                    len = qspAddText(&buf, QSP_FMT("\t"), len, -1, QSP_FALSE);
+                    len = qspAddText(&buf, tempStrs[k], len, -1, QSP_FALSE);
+                    len = qspAddText(&buf, QSP_STRSDELIM, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
+                }
+                qspFreeStrs((void **)tempStrs, linesCount);
+            }
+
+            /* Write action footer */
+            len = qspAddText(&buf, QSP_FMT("END"), len, -1, QSP_FALSE);
+            len = qspAddText(&buf, QSP_STRSDELIM, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
         }
         /* Write location code */
         len = qspAddText(&buf, qspLocs[i].OnVisit, len, -1, QSP_FALSE);

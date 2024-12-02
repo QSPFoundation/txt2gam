@@ -36,6 +36,7 @@
         QSP_CHAR *Desc;
         QSP_CHAR *OnVisit;
         QSPLocAct Actions[QSP_MAXACTIONS];
+        int ActionsCount; /* max number of actions */
     } QSPLocation;
 
     extern QSPLocation *qspLocs;

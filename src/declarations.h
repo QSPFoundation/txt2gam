@@ -32,6 +32,8 @@
     #include "memwatch.h"
 #endif
 
+#include <oniguruma.h>
+
 #ifndef QSP_DEFINES
     #define QSP_DEFINES
 
@@ -39,11 +41,9 @@
         typedef wchar_t QSP_CHAR;
         #define QSP_FMT2(x) L##x
         #define QSP_FMT(x) QSP_FMT2(x)
-        #define QSP_STRCPY wcscpy
-        #define QSP_STRNCPY wcsncpy
-        #define QSP_STRLEN wcslen
-        #define QSP_STRSTR wcsstr
-        #define QSP_STRCHR wcschr
+
+        #define QSP_ONIG_ENC (sizeof(QSP_CHAR) == 2 ? ONIG_ENCODING_UTF16_LE : ONIG_ENCODING_UTF32_LE)
+
         #define QSP_WCSTOMBSLEN(a) wcstombs(0, a, 0)
         #define QSP_WCSTOMBS wcstombs
         #define QSP_MBSTOWCSLEN(a) mbstowcs(0, a, 0)
@@ -55,11 +55,9 @@
     #else
         typedef char QSP_CHAR;
         #define QSP_FMT(x) x
-        #define QSP_STRCPY strcpy
-        #define QSP_STRNCPY strncpy
-        #define QSP_STRLEN strlen
-        #define QSP_STRSTR strstr
-        #define QSP_STRCHR strchr
+
+        #define QSP_ONIG_ENC ONIG_ENCODING_CP1251
+
         #define QSP_WCSTOMBSLEN strlen
         #define QSP_WCSTOMBS strncpy
         #define QSP_MBSTOWCSLEN strlen
@@ -79,7 +77,7 @@
     };
 
     #define QSP_VER QSP_FMT(TXT2GAM_VER_STR)
-    #define QSP_LOCALE "" /* system locale */
+    #define QSP_LOCALE "C" /* default locale */
 
     #define QSP_TRUE 1
     #define QSP_FALSE 0

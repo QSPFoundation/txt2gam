@@ -98,7 +98,7 @@ QSP_CHAR *qspToQSPString(char *s)
 char *qspQSPToGameString(QSP_CHAR *s, QSP_BOOL isUCS2, QSP_BOOL isCode)
 {
     unsigned short uCh, *ptr;
-    int len = (int)QSP_STRLEN(s);
+    int len = qspStrLen(s);
     char ch, *ret = (char *)malloc((len + 1) * (isUCS2 ? 2 : 1));
     if (isUCS2)
     {
@@ -202,7 +202,7 @@ int qspSplitGameStr(char *str, QSP_BOOL isUCS2, QSP_CHAR *delim, char ***res)
     char *delimStr, *newStr, **ret, *found, *curPos = str;
     int charSize, delimSize, allocChars, count = 0, bufSize = 8;
     charSize = (isUCS2 ? 2 : 1);
-    delimSize = (int)QSP_STRLEN(delim) * charSize;
+    delimSize = qspStrLen(delim) * charSize;
     delimStr = qspQSPToGameString(delim, isUCS2, QSP_FALSE);
     found = (isUCS2 ? qspUCS2StrStr(str, delimStr) : strstr(str, delimStr));
     ret = (char **)malloc(bufSize * sizeof(char *));
@@ -312,7 +312,7 @@ char *qspQSPStringToUTF8(QSP_CHAR *s)
 #endif
     QSP_CHAR *ptr;
     unsigned int codepoint = 0;
-    int len = 0, maxLen = (int)QSP_STRLEN(s) * 4; /* we're very conservative here */
+    int len = 0, maxLen = qspStrLen(s) * 4; /* we're very conservative here */
     char *ret = (char *)malloc(maxLen + 1);
     ret[maxLen] = 0;
     for (ptr = s; *ptr; ++ptr)
