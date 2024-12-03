@@ -22,6 +22,8 @@
     #define QSP_LOCDATADEFINES
 
     /* External functions */
-    QSP_BOOL qspExtractLocationData(QSP_CHAR *locCode, QSPLocation *location);
+    QSP_BOOL qspInitLocProcessor();
+    void qspTerminateLocProcessor();
+    QSP_BOOL qspProcessLocationData(QSP_CHAR *locCode, QSPLocation *location);
 
 #endif

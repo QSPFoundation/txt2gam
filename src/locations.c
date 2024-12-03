@@ -260,7 +260,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                     if (isFill)
                     {
                         locCode[locCodeLen] = 0;
-                        if (qspExtractLocationData(locCode, qspLocs + curLoc))
+                        if (qspProcessLocationData(locCode, qspLocs + curLoc))
                             free(locCode);
                         else
                             qspLocs[curLoc].OnVisit = locCode;
@@ -352,7 +352,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
         if (isFill)
         {
             locCode[locCodeLen] = 0;
-            if (qspExtractLocationData(locCode, qspLocs + curLoc))
+            if (qspProcessLocationData(locCode, qspLocs + curLoc))
                 free(locCode);
             else
                 qspLocs[curLoc].OnVisit = locCode;

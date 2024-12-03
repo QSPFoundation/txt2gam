@@ -17,9 +17,7 @@
 
 #include "text.h"
 
-static QSP_CHAR *qspStrEnd(QSP_CHAR *);
-
-static QSP_CHAR *qspStrEnd(QSP_CHAR *s)
+QSP_CHAR *qspStrEnd(QSP_CHAR *s)
 {
     while (*s) ++s;
     return s;

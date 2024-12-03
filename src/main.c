@@ -18,6 +18,7 @@
 #include "main.h"
 #include "coding.h"
 #include "locations.h"
+#include "locdata.h"
 #include "text.h"
 
 static QSP_BOOL qspLoadTextFile(char *file, QSP_BOOL isUnicode, QSP_CHAR **data);
@@ -284,6 +285,11 @@ int main(int argc, char **argv)
             break;
         }
     }
+    if (!qspInitLocProcessor())
+    {
+        printf("Can't initialize the loc processor!\n");
+        return 1;
+    }
     qspLocs = 0;
     qspLocsCount = 0;
     isErr = QSP_FALSE;
@@ -320,6 +326,7 @@ int main(int argc, char **argv)
             break;
     }
     qspCreateWorld(0);
+    qspTerminateLocProcessor();
     free(locStart);
     free(locEnd);
     free(passwd);

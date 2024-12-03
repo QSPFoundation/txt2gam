@@ -39,6 +39,7 @@
     QSP_CHAR *qspSkipSpaces(QSP_CHAR *s);
     QSP_CHAR *qspDelSpc(QSP_CHAR *s);
     QSP_CHAR *qspNewStr(QSP_CHAR *s);
+    QSP_CHAR *qspStrEnd(QSP_CHAR *s);
     int qspStrLen(QSP_CHAR *str);
     QSP_BOOL qspIsEmpty(QSP_CHAR *str);
     QSP_CHAR *qspStrChr(QSP_CHAR *str, QSP_CHAR ch);

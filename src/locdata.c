@@ -18,7 +18,16 @@
 #include "locdata.h"
 #include "text.h"
 
-QSP_BOOL qspExtractLocationData(QSP_CHAR *locCode, QSPLocation *location)
+QSP_BOOL qspInitLocProcessor()
+{
+    return QSP_TRUE;
+}
+
+void qspTerminateLocProcessor()
+{
+}
+
+QSP_BOOL qspProcessLocationData(QSP_CHAR *locCode, QSPLocation *location)
 {
     return QSP_FALSE;
 }
