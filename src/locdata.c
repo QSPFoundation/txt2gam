@@ -155,6 +155,7 @@ QSP_BOOL qspParseBaseAction(QSP_CHAR **code, QSPLocation *loc)
 
 QSP_BOOL qspUpdateActionCode(QSP_CHAR *code, QSPLocation *loc)
 {
+    QSPLocAct *action;
     QSP_CHAR *formattedCode, *formattedLine, **lines;
     int i, bufSize, formattedCodeLen, linesCount, actionsCount = loc->ActionsCount;
     if (!actionsCount)
@@ -177,12 +178,16 @@ QSP_BOOL qspUpdateActionCode(QSP_CHAR *code, QSPLocation *loc)
         formattedCodeLen = qspAddTextToBuffer(&formattedCode, QSP_STRSDELIM, QSP_LEN(QSP_STRSDELIM), formattedCodeLen, &bufSize);
     }
     qspFreeStrs((void **)lines, linesCount);
-    loc->Actions[actionsCount - 1].Code = formattedCode;
+    /* Update the last action */
+    action = loc->Actions + actionsCount - 1;
+    if (action->Code) free(action->Code);
+    action->Code = formattedCode;
     return QSP_TRUE;
 }
 
 QSP_BOOL qspUpdateLocationCode(QSP_CHAR *code, QSPLocation *loc)
 {
+    if (loc->OnVisit) free(loc->OnVisit);
     loc->OnVisit = qspNewStr(code);
     return QSP_TRUE;
 }
