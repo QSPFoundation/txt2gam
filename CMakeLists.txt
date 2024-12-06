@@ -89,6 +89,7 @@ set(TXT2GAM_SOURCES
 	src/main.c
 	src/memwatch.c
 	src/text.c
+	src/sys.c
 )
 add_executable(txt2gam ${TXT2GAM_SOURCES})
 

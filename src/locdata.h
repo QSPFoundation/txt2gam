@@ -21,9 +21,22 @@
 #ifndef QSP_LOCDATADEFINES
     #define QSP_LOCDATADEFINES
 
+    #define QSP_BASEDESC QSP_FMT("! BASE DESC")
+    #define QSP_BASEACTS QSP_FMT("! BASE ACTIONS")
+    #define QSP_LOCCODE QSP_FMT("! LOC CODE")
+    #define QSP_BASEDESC_PRINT QSP_FMT("*P")
+    #define QSP_BASEDESC_PRINTLINE QSP_FMT("*PL")
+    #define QSP_BASEACTS_ACT_HEADER QSP_FMT("ACT")
+    #define QSP_BASEACTS_ACT_FOOTER QSP_FMT("END")
+    #define QSP_BASEACTS_LINE_PREFIX QSP_FMT("\t")
+
     /* External functions */
     QSP_BOOL qspInitLocProcessor();
     void qspTerminateLocProcessor();
-    QSP_BOOL qspProcessLocationData(QSP_CHAR *locCode, QSPLocation *location);
+    QSP_BOOL qspParseBaseDescriptionPrint(QSP_CHAR **code, QSPLocation *loc);
+    QSP_BOOL qspParseBaseDescriptionPrintLine(QSP_CHAR **code, QSPLocation *loc);
+    QSP_BOOL qspParseBaseAction(QSP_CHAR **code, QSPLocation *loc);
+    QSP_BOOL qspUpdateActionCode(QSP_CHAR *code, QSPLocation *loc);
+    QSP_BOOL qspUpdateLocationCode(QSP_CHAR *code, QSPLocation *loc);
 
 #endif

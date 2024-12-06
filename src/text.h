@@ -21,17 +21,20 @@
     #define QSP_TEXTDEFINES
 
     #define QSP_STRSDELIM QSP_FMT("\r\n")
-    #define QSP_NEWLINE QSP_FMT('\n')
     #define QSP_SPACES QSP_FMT(" \t")
     #define QSP_QUOTS QSP_FMT("'\"")
-    #define QSP_LQUOT QSP_FMT("{")
-    #define QSP_RQUOT QSP_FMT("}")
+    #define QSP_NEWLINE QSP_FMT('\n')
+    #define QSP_LQUOT QSP_FMT('{')
+    #define QSP_RQUOT QSP_FMT('}')
+    #define QSP_COLON QSP_FMT(':')
+    #define QSP_COMMA QSP_FMT(',')
 
     /* Helpers */
     #define QSP_LEN(x) (sizeof(x) / sizeof(QSP_CHAR) - 1)
 
     /* External functions */
     void qspFormatLineEndings(QSP_CHAR *data);
+    QSP_CHAR *qspAllocateBuffer(int bufSize);
     int qspAddCharToBuffer(QSP_CHAR **buf, QSP_CHAR ch, int strLen, int *bufSize);
     int qspAddTextToBuffer(QSP_CHAR **buf, QSP_CHAR *val, int valLen, int strLen, int *bufSize);
     int qspAddText(QSP_CHAR **dest, QSP_CHAR *val, int destLen, int valLen, QSP_BOOL toCreate);

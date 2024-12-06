@@ -17,12 +17,6 @@
 
 #include "text.h"
 
-QSP_CHAR *qspStrEnd(QSP_CHAR *s)
-{
-    while (*s) ++s;
-    return s;
-}
-
 void qspFormatLineEndings(QSP_CHAR *data)
 {
     QSP_CHAR *src = data, *dest = data;
@@ -54,6 +48,13 @@ void qspFormatLineEndings(QSP_CHAR *data)
         ++dest;
     }
     *dest = 0;
+}
+
+QSP_CHAR *qspAllocateBuffer(int bufSize)
+{
+    QSP_CHAR *buf = (QSP_CHAR *)malloc(bufSize * sizeof(QSP_CHAR));
+    buf[0] = 0; /* make sure it can be used as a null-terminated string */
+    return buf;
 }
 
 int qspAddCharToBuffer(QSP_CHAR **buf, QSP_CHAR ch, int strLen, int *bufSize)
@@ -139,6 +140,12 @@ QSP_CHAR *qspNewStr(QSP_CHAR *s)
     int len = qspStrLen(s);
     QSP_CHAR *str = (QSP_CHAR *)malloc((len + 1) * sizeof(QSP_CHAR));
     return qspStrCopy(str, s);
+}
+
+QSP_CHAR *qspStrEnd(QSP_CHAR *s)
+{
+    while (*s) ++s;
+    return s;
 }
 
 int qspStrLen(QSP_CHAR *str)

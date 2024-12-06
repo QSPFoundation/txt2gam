@@ -20,6 +20,7 @@
 #include "locations.h"
 #include "locdata.h"
 #include "text.h"
+#include "sys.h"
 
 static QSP_BOOL qspLoadTextFile(char *file, QSP_BOOL isUnicode, QSP_CHAR **data);
 static QSP_BOOL qspSaveTextFile(char *file, QSP_CHAR *data, QSP_BOOL isUnicode);
@@ -133,6 +134,7 @@ static QSP_BOOL qspOpenQuestFromTextFile(char *file, QSP_BOOL isUnicode, QSP_CHA
     QSP_CHAR *data;
     if (!qspLoadTextFile(file, isUnicode, &data)) return QSP_FALSE;
     locsCount = qspOpenTextData(data, locStart, locEnd, QSP_FALSE);
+    qspPrint("Found %d locations\n", locsCount);
     qspCreateWorld(locsCount);
     qspOpenTextData(data, locStart, locEnd, QSP_TRUE);
     free(data);
@@ -186,40 +188,32 @@ static QSP_BOOL qspSaveQuestToTextFile(char *file, QSP_CHAR *locStart, QSP_CHAR 
 
 void ShowHelp()
 {
-    char *temp = qspFromQSPString(QSP_VER);
-    printf("TXT2GAM utility, ver. %s\n", temp);
-    free(temp);
-    printf("Usage:\n");
-    printf("  txt2gam [input file] [output file] [options]\n");
-    printf("Options:\n");
-    printf("  a, A - ANSI mode, default is Unicode (UTF-8, UCS-2/UTF-16) mode\n");
-    printf("  o, O - Save game in old format, default is new format\n");
-    temp = qspFromQSPString(QSP_STARTLOC);
-    printf("  s[string], S[string] - 'Start of loc' prefix, default is '%s'\n", temp);
-    free(temp);
-    temp = qspFromQSPString(QSP_ENDLOC);
-    printf("  e[string], E[string] - 'End of loc' prefix, default is '%s'\n", temp);
-    free(temp);
-    temp = qspFromQSPString(QSP_PASSWD);
-    printf("  p[pass], P[pass] - Password, default is '%s'\n", temp);
-    free(temp);
-    printf("  c, C - Encode text file into game file (default mode)\n");
-    printf("  d, D - Decode game file into text file\n");
-    printf("  t, T - Extract strings from text\n");
-    printf("  q, Q - Extract q-strings from text\n");
-    printf("Examples:\n");
-    printf("  txt2gam file.txt gamefile.qsp pMyPassword\n");
-    printf("  txt2gam file.txt gamefile.qsp\n");
-    printf("  txt2gam file.txt gamefile.qsp a\n");
-    printf("  txt2gam gamefile.qsp file.txt d pMyPassword\n");
-    printf("  txt2gam file.txt gamefile.qsp o pMyPassword\n");
-    printf("  txt2gam file.txt gamefile.qsp o e@ pMyPassword\n");
-    printf("  txt2gam file.txt gamefile.qsp o \"pMy Password\"\n");
-    printf("  txt2gam file.txt gamefile.qsp a o \"pMy Password\"\n");
-    printf("  txt2gam file.txt gamefile.qsp o\n");
-    printf("  txt2gam file.txt gamefile.qsp o e@\n");
-    printf("  txt2gam file.txt gamefile.qsp s@ e~\n");
-    printf("  txt2gam file.txt strsfile.txt t a\n");
+    qspPrint("TXT2GAM utility, ver. %s\n", QSP_VER);
+    qspPrint("Usage:\n");
+    qspPrint("  txt2gam [input file] [output file] [options]\n");
+    qspPrint("Options:\n");
+    qspPrint("  a, A - ANSI mode, default is Unicode (UTF-8, UCS-2/UTF-16) mode\n");
+    qspPrint("  o, O - Save game in old format, default is new format\n");
+    qspPrint("  s[string], S[string] - 'Start of loc' prefix, default is '%s'\n", QSP_STARTLOC);
+    qspPrint("  e[string], E[string] - 'End of loc' prefix, default is '%s'\n", QSP_ENDLOC);
+    qspPrint("  p[pass], P[pass] - Password, default is '%s'\n", QSP_PASSWD);
+    qspPrint("  c, C - Encode text file into game file (default mode)\n");
+    qspPrint("  d, D - Decode game file into text file\n");
+    qspPrint("  t, T - Extract strings from text\n");
+    qspPrint("  q, Q - Extract q-strings from text\n");
+    qspPrint("Examples:\n");
+    qspPrint("  txt2gam file.txt gamefile.qsp pMyPassword\n");
+    qspPrint("  txt2gam file.txt gamefile.qsp\n");
+    qspPrint("  txt2gam file.txt gamefile.qsp a\n");
+    qspPrint("  txt2gam gamefile.qsp file.txt d pMyPassword\n");
+    qspPrint("  txt2gam file.txt gamefile.qsp o pMyPassword\n");
+    qspPrint("  txt2gam file.txt gamefile.qsp o e@ pMyPassword\n");
+    qspPrint("  txt2gam file.txt gamefile.qsp o \"pMy Password\"\n");
+    qspPrint("  txt2gam file.txt gamefile.qsp a o \"pMy Password\"\n");
+    qspPrint("  txt2gam file.txt gamefile.qsp o\n");
+    qspPrint("  txt2gam file.txt gamefile.qsp o e@\n");
+    qspPrint("  txt2gam file.txt gamefile.qsp s@ e~\n");
+    qspPrint("  txt2gam file.txt strsfile.txt t a\n");
 }
 
 int main(int argc, char **argv)
@@ -259,14 +253,29 @@ int main(int argc, char **argv)
                 case 's': case 'S':
                     free(locStart);
                     locStart = qspToQSPString(argv[i] + 1);
+                    if (!locStart)
+                    {
+                        qspPrint("Loc start symbol is invalid");
+                        workMode = QSP_ERROR;
+                    }
                     break;
                 case 'e': case 'E':
                     free(locEnd);
                     locEnd = qspToQSPString(argv[i] + 1);
+                    if (!locEnd)
+                    {
+                        qspPrint("Loc end symbol is invalid");
+                        workMode = QSP_ERROR;
+                    }
                     break;
                 case 'p': case 'P':
                     free(passwd);
                     passwd = qspToQSPString(argv[i] + 1);
+                    if (!passwd)
+                    {
+                        qspPrint("Password is invalid");
+                        workMode = QSP_ERROR;
+                    }
                     break;
                 }
             }
@@ -284,10 +293,19 @@ int main(int argc, char **argv)
             workMode = QSP_EXTRACT_QSTRINGS;
             break;
         }
+        if (workMode == QSP_ERROR)
+            break;
+    }
+    if (workMode == QSP_ERROR)
+    {
+        if (locStart) free(locStart);
+        if (locEnd) free(locEnd);
+        if (passwd) free(passwd);
+        return 1;
     }
     if (!qspInitLocProcessor())
     {
-        printf("Can't initialize the loc processor!\n");
+        qspPrint("Can't initialize the loc processor!\n");
         return 1;
     }
     qspLocs = 0;
@@ -298,18 +316,18 @@ int main(int argc, char **argv)
         case QSP_EXTRACT_STRINGS:
         case QSP_EXTRACT_QSTRINGS:
             if (isErr = !qspExportStrings(argv[1], argv[2], locStart, locEnd, workMode == QSP_EXTRACT_QSTRINGS, isUnicode))
-                printf("String extraction has failed!\n");
+                qspPrint("String extraction has failed!\n");
             break;
         case QSP_ENCODE_INTO_GAME:
             do
             {
                 if (isErr = !qspOpenQuestFromTextFile(argv[1], isUnicode, locStart, locEnd))
                 {
-                    printf("Loading text file has failed!\n");
+                    qspPrint("Loading text file has failed!\n");
                     break;
                 }
                 if (isErr = !qspSaveGameFile(argv[2], isOldFormat, isUnicode, passwd))
-                    printf("Saving game has failed!\n");
+                    qspPrint("Saving game has failed!\n");
             } while (0);
             break;
         case QSP_DECODE_INTO_TEXT:
@@ -317,11 +335,11 @@ int main(int argc, char **argv)
             {
                 if (isErr = !qspOpenGameFile(argv[1], passwd))
                 {
-                    printf("Can't open game!\n");
+                    qspPrint("Can't open game!\n");
                     break;
                 }
                 if (isErr = !qspSaveQuestToTextFile(argv[2], locStart, locEnd, isUnicode))
-                    printf("Saving text file has failed!\n");
+                    qspPrint("Saving text file has failed!\n");
             } while (0);
             break;
     }

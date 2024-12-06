@@ -17,21 +17,10 @@
 
 #include "declarations.h"
 
-#ifndef QSP_MAINDEFINES
-    #define QSP_MAINDEFINES
+#ifndef QSP_SYSDEFINES
+    #define QSP_SYSDEFINES
 
-    #define QSP_STARTLOC QSP_FMT("#")
-    #define QSP_ENDLOC QSP_FMT("--")
-    #define TXT2GAM_UCS2BOM "\xFF\xFE"
-    #define TXT2GAM_UTF8BOM "\xEF\xBB\xBF"
-
-    enum Mode
-    {
-        QSP_ERROR,
-        QSP_ENCODE_INTO_GAME,
-        QSP_DECODE_INTO_TEXT,
-        QSP_EXTRACT_STRINGS,
-        QSP_EXTRACT_QSTRINGS
-    };
+    /* External functions */
+    void qspPrint(const char *format, ...);
 
 #endif

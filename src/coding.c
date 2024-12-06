@@ -82,6 +82,7 @@ char qspReverseConvertUC(wchar_t ch, wchar_t *table)
 char *qspFromQSPString(QSP_CHAR *s)
 {
     int len = (int)QSP_WCSTOMBSLEN(s) + 1;
+    if (!len) return 0;
     char *ret = (char *)malloc(len);
     QSP_WCSTOMBS(ret, s, len);
     return ret;
@@ -90,6 +91,7 @@ char *qspFromQSPString(QSP_CHAR *s)
 QSP_CHAR *qspToQSPString(char *s)
 {
     int len = (int)QSP_MBSTOWCSLEN(s) + 1;
+    if (!len) return 0;
     QSP_CHAR *ret = (QSP_CHAR *)malloc(len * sizeof(QSP_CHAR));
     QSP_MBSTOWCS(ret, s, len);
     return ret;
