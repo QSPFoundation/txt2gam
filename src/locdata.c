@@ -163,6 +163,7 @@ QSP_BOOL qspUpdateActionCode(QSP_CHAR *code, QSPLocation *loc)
         qspPrint("Warning: no actions to update\n");
         return QSP_FALSE;
     }
+    /* Trim QSP_BASEACTS_LINE_PREFIX */
     bufSize = 512;
     formattedCode = qspAllocateBuffer(bufSize);
     formattedCodeLen = 0;
