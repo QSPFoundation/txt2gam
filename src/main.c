@@ -255,7 +255,7 @@ int main(int argc, char **argv)
                     locStart = qspToQSPString(argv[i] + 1);
                     if (!locStart)
                     {
-                        qspPrint("Loc start symbol is invalid");
+                        qspPrint("Loc start symbol is invalid\n");
                         workMode = QSP_ERROR;
                     }
                     break;
@@ -264,7 +264,7 @@ int main(int argc, char **argv)
                     locEnd = qspToQSPString(argv[i] + 1);
                     if (!locEnd)
                     {
-                        qspPrint("Loc end symbol is invalid");
+                        qspPrint("Loc end symbol is invalid\n");
                         workMode = QSP_ERROR;
                     }
                     break;
@@ -273,7 +273,7 @@ int main(int argc, char **argv)
                     passwd = qspToQSPString(argv[i] + 1);
                     if (!passwd)
                     {
-                        qspPrint("Password is invalid");
+                        qspPrint("Password is invalid\n");
                         workMode = QSP_ERROR;
                     }
                     break;
