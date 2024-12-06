@@ -65,7 +65,7 @@ QSP_BOOL qspParseBaseDescriptionPrint(QSP_CHAR **code, QSPLocation *loc)
     desc = qspReadString(&ptr);
     if (!desc)
     {
-        qspPrint("Warning: can't get base description");
+        qspPrint("Warning: can't get base description\n");
         *code = ptr;
         return QSP_FALSE;
     }
@@ -101,16 +101,17 @@ QSP_BOOL qspParseBaseAction(QSP_CHAR **code, QSPLocation *loc)
     actName = qspReadString(&ptr);
     if (!actName)
     {
-        qspPrint("Warning: can't get the action name");
+        qspPrint("Warning: can't get the action name\n");
         *code = ptr;
         return QSP_FALSE;
     }
     if (*ptr == QSP_COMMA)
     {
+        ++ptr;
         actImage = qspReadString(&ptr);
         if (!actImage)
         {
-            qspPrint("Warning: can't get the image");
+            qspPrint("Warning: can't get the image\n");
             free(actName);
             *code = ptr;
             return QSP_FALSE;
@@ -120,7 +121,7 @@ QSP_BOOL qspParseBaseAction(QSP_CHAR **code, QSPLocation *loc)
         actImage = 0;
     if (*ptr != QSP_COLON)
     {
-        qspPrint("Warning: base action is incorrect");
+        qspPrint("Warning: base action is incorrect\n");
         free(actName);
         if (actImage) free(actImage);
         *code = ptr;
@@ -131,7 +132,7 @@ QSP_BOOL qspParseBaseAction(QSP_CHAR **code, QSPLocation *loc)
         int actionsCount = loc->ActionsCount;
         if (actionsCount >= QSP_MAXACTIONS)
         {
-            qspPrint("Warning: too many base actions");
+            qspPrint("Warning: too many base actions\n");
             free(actName);
             if (actImage) free(actImage);
             *code = ptr;
@@ -158,7 +159,7 @@ QSP_BOOL qspUpdateActionCode(QSP_CHAR *code, QSPLocation *loc)
     int i, bufSize, formattedCodeLen, linesCount, actionsCount = loc->ActionsCount;
     if (!actionsCount)
     {
-        qspPrint("Warning: no actions to update");
+        qspPrint("Warning: no actions to update\n");
         return QSP_FALSE;
     }
     bufSize = 512;
