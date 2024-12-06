@@ -32,8 +32,6 @@
     #include "memwatch.h"
 #endif
 
-#include <oniguruma.h>
-
 #ifndef QSP_DEFINES
     #define QSP_DEFINES
 
@@ -41,8 +39,6 @@
         typedef wchar_t QSP_CHAR;
         #define QSP_FMT2(x) L##x
         #define QSP_FMT(x) QSP_FMT2(x)
-
-        #define QSP_ONIG_ENC (sizeof(QSP_CHAR) == 2 ? ONIG_ENCODING_UTF16_LE : ONIG_ENCODING_UTF32_LE)
 
         #define QSP_WCSTOMBSLEN(a) wcstombs(0, a, 0)
         #define QSP_WCSTOMBS wcstombs
@@ -55,8 +51,6 @@
     #else
         typedef char QSP_CHAR;
         #define QSP_FMT(x) x
-
-        #define QSP_ONIG_ENC ONIG_ENCODING_CP1251
 
         #define QSP_WCSTOMBSLEN strlen
         #define QSP_WCSTOMBS strncpy

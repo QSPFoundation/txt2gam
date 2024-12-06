@@ -44,42 +44,6 @@ else()
 	message(FATAL_ERROR "Compiler is not supported")
 endif()
 
-option(USE_INSTALLED_ONIGURUMA "Use system-wide oniguruma library instead of bundling it" OFF)
-
-if (USE_INSTALLED_ONIGURUMA)
-	find_package(oniguruma REQUIRED)
-else()
-	# Download and unpack oniguruma at configure time
-	configure_file(CMakeLists-oniguruma.txt.in "${CMAKE_BINARY_DIR}/oniguruma-download/CMakeLists.txt")
-	execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-			WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/oniguruma-download"
-	)
-	execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-			WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/oniguruma-download"
-	)
-
-	# Disable oniguruma features we don't need
-	set(INSTALL_DOCUMENTATION OFF)
-	set(INSTALL_EXAMPLES OFF)
-	set(BUILD_TEST OFF)
-	set(BUILD_SHARED_LIBS OFF)
-	set(MSVC_STATIC_RUNTIME ON)
-
-	# For Windows: Prevent overriding the parent project's compiler/linker settings
-	set(oniguruma_force_shared_crt ON CACHE BOOL "" FORCE)
-
-	# Configure the CRNL handling
-	add_compile_definitions(USE_CRNL_AS_LINE_TERMINATOR=1)
-
-	# Add oniguruma directly to our build
-	set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
-	set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-	add_subdirectory("${CMAKE_BINARY_DIR}/oniguruma-src"
-			"${CMAKE_BINARY_DIR}/oniguruma-build"
-	)
-	add_library(oniguruma::onig ALIAS onig)
-endif()
-
 configure_file(txt2gam_config.h.cmakein txt2gam_config.h @ONLY)
 
 set(TXT2GAM_SOURCES
@@ -103,7 +67,6 @@ if (SPEC_PASS)
 endif()
 target_compile_options(txt2gam PRIVATE ${PROJECT_COMPILER_FLAGS})
 target_link_options(txt2gam PRIVATE ${PROJECT_LINKER_FLAGS})
-target_link_libraries(txt2gam PRIVATE oniguruma::onig)
 
 # Installation
 
