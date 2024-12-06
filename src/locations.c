@@ -309,7 +309,16 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                 }
                 else if (isInBaseDesc)
                 {
-                    if (qspIsEqual(line, QSP_BASEDESC_PRINTLINE, QSP_LEN(QSP_BASEDESC_PRINTLINE)))
+                    if (qspIsInList(QSP_QUOTS, *line))
+                    {
+                        toSkipLine = QSP_TRUE;
+                        /* Parse & add base description */
+                        if (toFill)
+                            qspParseBaseDescriptionPrintLine(&line, qspLocs + curLoc);
+                        else
+                            qspParseBaseDescriptionPrintLine(&line, 0);
+                    }
+                    else if (qspIsEqual(line, QSP_BASEDESC_PRINTLINE, QSP_LEN(QSP_BASEDESC_PRINTLINE)))
                     {
                         line += QSP_LEN(QSP_BASEDESC_PRINTLINE);
                         toSkipLine = QSP_TRUE;
