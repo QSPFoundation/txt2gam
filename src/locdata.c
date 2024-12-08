@@ -138,7 +138,7 @@ QSP_BOOL qspParseBaseAction(QSP_CHAR **code, QSPLocation *loc)
             *code = ptr;
             return QSP_FALSE;
         }
-        qspPrint("\tAction: %s\n", actName);
+        qspPrint("\tBase action: %s\n", actName);
         loc->Actions[actionsCount].Desc = actName;
         loc->Actions[actionsCount].Image = actImage;
         loc->Actions[actionsCount].Code = 0;
