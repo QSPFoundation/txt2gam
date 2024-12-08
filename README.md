@@ -18,7 +18,6 @@ cmake --build build --target install --config Release
 
 ## TODO
 
-* Extend TXT2GAM format to support optional base description & base actions
 * Join multiple text files (you can specify a file that contains a list of files to be joined)
 
 ## Support us
