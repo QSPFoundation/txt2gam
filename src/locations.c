@@ -240,7 +240,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
 
 int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toFill)
 {
-    QSP_CHAR *locCode, *line, *pos, quot = 0;
+    QSP_CHAR *locCode, *pos, quot = 0;
     int locStartLen, locEndLen, locBufSize = 1024, locCodeLen = 0, quotsCount = 0, curLoc = 0;
     QSP_BOOL isNewLine = QSP_TRUE, isInLoc = QSP_FALSE, isInBaseSection = QSP_FALSE, isInBaseAction = QSP_FALSE;
     locStartLen = qspStrLen(locStart);
@@ -257,10 +257,9 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
             if (!quot && !quotsCount && isNewLine)
             {
                 QSP_BOOL toSkipLine = QSP_FALSE;
-                line = data;
-                if (qspIsEqual(line, locEnd, locEndLen))
+                if (qspIsEqual(data, locEnd, locEndLen))
                 {
-                    line += locEndLen;
+                    data += locEndLen;
                     toSkipLine = QSP_TRUE; /* we're searching for a new loc now */
 
                     if (toFill && locCodeLen > QSP_LEN(QSP_STRSDELIM)) /* we have to remove the last line separator */
@@ -283,9 +282,9 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                 {
                     if (isInBaseAction)
                     {
-                        if (qspIsEqual(line, QSP_BASEACTS_ACT_FOOTER, QSP_LEN(QSP_BASEACTS_ACT_FOOTER)))
+                        if (qspIsEqual(data, QSP_BASEACTS_ACT_FOOTER, QSP_LEN(QSP_BASEACTS_ACT_FOOTER)))
                         {
-                            line += QSP_LEN(QSP_BASEACTS_ACT_FOOTER);
+                            data += QSP_LEN(QSP_BASEACTS_ACT_FOOTER);
                             toSkipLine = QSP_TRUE;
                             /* Update action code */
                             if (toFill && locCodeLen > QSP_LEN(QSP_STRSDELIM)) /* we have to remove the last line separator */
@@ -297,60 +296,60 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                             isInBaseAction = QSP_FALSE;
                         }
                     }
-                    else if (qspIsEqual(line, QSP_BASESECTION_FOOTER, QSP_LEN(QSP_BASESECTION_FOOTER)))
+                    else if (qspIsEqual(data, QSP_BASESECTION_FOOTER, QSP_LEN(QSP_BASESECTION_FOOTER)))
                     {
-                        line += QSP_LEN(QSP_BASESECTION_FOOTER);
+                        data += QSP_LEN(QSP_BASESECTION_FOOTER);
                         toSkipLine = QSP_TRUE;
 
                         locCodeLen = 0; /* reuse the code buffer */
                         isInBaseSection = QSP_FALSE;
                     }
-                    else if (qspIsEqual(line, QSP_BASEACTS_ACT_HEADER, QSP_LEN(QSP_BASEACTS_ACT_HEADER)))
+                    else if (qspIsEqual(data, QSP_BASEACTS_ACT_HEADER, QSP_LEN(QSP_BASEACTS_ACT_HEADER)))
                     {
-                        line += QSP_LEN(QSP_BASEACTS_ACT_HEADER);
+                        data += QSP_LEN(QSP_BASEACTS_ACT_HEADER);
                         toSkipLine = QSP_TRUE;
                         /* Parse & add an action */
                         if (toFill)
-                            qspParseBaseAction(&line, qspLocs + curLoc);
+                            qspParseBaseAction(&data, qspLocs + curLoc);
                         else
-                            qspParseBaseAction(&line, 0);
+                            qspParseBaseAction(&data, 0);
 
                         locCodeLen = 0; /* reuse the code buffer */
                         isInBaseAction = QSP_TRUE;
                     }
-                    else if (qspIsInList(QSP_QUOTS, *line))
+                    else if (qspIsInList(QSP_QUOTS, *data))
                     {
                         toSkipLine = QSP_TRUE;
                         /* Parse & add base description */
                         if (toFill)
-                            qspParseBaseDescriptionPrintLine(&line, qspLocs + curLoc);
+                            qspParseBaseDescriptionPrintLine(&data, qspLocs + curLoc);
                         else
-                            qspParseBaseDescriptionPrintLine(&line, 0);
+                            qspParseBaseDescriptionPrintLine(&data, 0);
                     }
-                    else if (qspIsEqual(line, QSP_BASEDESC_PRINTLINE, QSP_LEN(QSP_BASEDESC_PRINTLINE)))
+                    else if (qspIsEqual(data, QSP_BASEDESC_PRINTLINE, QSP_LEN(QSP_BASEDESC_PRINTLINE)))
                     {
-                        line += QSP_LEN(QSP_BASEDESC_PRINTLINE);
+                        data += QSP_LEN(QSP_BASEDESC_PRINTLINE);
                         toSkipLine = QSP_TRUE;
                         /* Parse & add base description */
                         if (toFill)
-                            qspParseBaseDescriptionPrintLine(&line, qspLocs + curLoc);
+                            qspParseBaseDescriptionPrintLine(&data, qspLocs + curLoc);
                         else
-                            qspParseBaseDescriptionPrintLine(&line, 0);
+                            qspParseBaseDescriptionPrintLine(&data, 0);
                     }
-                    else if (qspIsEqual(line, QSP_BASEDESC_PRINT, QSP_LEN(QSP_BASEDESC_PRINT)))
+                    else if (qspIsEqual(data, QSP_BASEDESC_PRINT, QSP_LEN(QSP_BASEDESC_PRINT)))
                     {
-                        line += QSP_LEN(QSP_BASEDESC_PRINT);
+                        data += QSP_LEN(QSP_BASEDESC_PRINT);
                         toSkipLine = QSP_TRUE;
                         /* Parse & add base description */
                         if (toFill)
-                            qspParseBaseDescriptionPrint(&line, qspLocs + curLoc);
+                            qspParseBaseDescriptionPrint(&data, qspLocs + curLoc);
                         else
-                            qspParseBaseDescriptionPrint(&line, 0);
+                            qspParseBaseDescriptionPrint(&data, 0);
                     }
                 }
-                else if (qspIsEqual(line, QSP_BASESECTION_HEADER, QSP_LEN(QSP_BASESECTION_HEADER)))
+                else if (qspIsEqual(data, QSP_BASESECTION_HEADER, QSP_LEN(QSP_BASESECTION_HEADER)))
                 {
-                    line += QSP_LEN(QSP_BASESECTION_HEADER);
+                    data += QSP_LEN(QSP_BASESECTION_HEADER);
                     toSkipLine = QSP_TRUE;
 
                     isInBaseSection = QSP_TRUE;
@@ -358,7 +357,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                 }
                 if (toSkipLine)
                 {
-                    pos = qspStrChr(line, QSP_NEWLINE);
+                    pos = qspStrChr(data, QSP_NEWLINE);
                     if (pos)
                     {
                         data = pos + 1;
@@ -412,21 +411,20 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
         else
         {
             /* We're not in any location */
-            line = qspSkipSpaces(data);
-            pos = qspStrChr(line, QSP_NEWLINE);
-            if (qspIsEqual(line, locStart, locStartLen))
+            pos = qspStrChr(data, QSP_NEWLINE);
+            if (qspIsEqual(data, locStart, locStartLen))
             {
                 if (toFill)
                 {
-                    line += locStartLen;
+                    data += locStartLen;
                     if (pos)
                     {
                         *pos = 0;
-                        qspLocs[curLoc].Name = qspDelSpc(line);
+                        qspLocs[curLoc].Name = qspDelSpc(data);
                         *pos = QSP_NEWLINE;
                     }
                     else
-                        qspLocs[curLoc].Name = qspDelSpc(line);
+                        qspLocs[curLoc].Name = qspDelSpc(data);
 
                     qspPrint("Location: %s\n", qspLocs[curLoc].Name);
                 }
