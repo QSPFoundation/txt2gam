@@ -257,7 +257,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
             if (!quot && !quotsCount && isNewLine)
             {
                 QSP_BOOL toSkipLine = QSP_FALSE;
-                line = qspSkipSpaces(data);
+                line = data;
                 if (qspIsEqual(line, locEnd, locEndLen))
                 {
                     line += locEndLen;
