@@ -101,7 +101,7 @@ void qspCreateWorld(int locsCount)
 
 QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toGetQStrings)
 {
-    QSP_CHAR *name, *curStr, *line, *pos, *res = 0, quot = 0;
+    QSP_CHAR *name, *curStr, *pos, *res = 0, quot = 0;
     int locStartLen, locEndLen, curBufSize = 1024, curStrLen = 0, resLen = 0, quotsCount = 0, strsCount = 0, locsCount = 0;
     QSP_BOOL isAddToString, isInLoc = QSP_FALSE;
     locStartLen = qspStrLen(locStart);
@@ -113,11 +113,10 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
         {
             if (!quot && !quotsCount && *data == QSP_NEWLINE)
             {
-                line = qspSkipSpaces(data + 1);
-                if (qspIsEqual(line, locEnd, locEndLen))
+                if (qspIsEqual(data + 1, locEnd, locEndLen))
                 {
                     isInLoc = QSP_FALSE;
-                    pos = qspStrChr(line + locEndLen, QSP_NEWLINE);
+                    pos = qspStrChr(data + 1 + locEndLen, QSP_NEWLINE);
                     if (pos)
                     {
                         data = pos + 1;
@@ -197,21 +196,20 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
         }
         else
         {
-            line = qspSkipSpaces(data);
-            pos = qspStrChr(line, QSP_NEWLINE);
-            if (qspIsEqual(line, locStart, locStartLen))
+            pos = qspStrChr(data, QSP_NEWLINE);
+            if (qspIsEqual(data, locStart, locStartLen))
             {
                 ++locsCount;
                 isInLoc = QSP_TRUE;
-                line += locStartLen;
+                data += locStartLen;
                 if (pos)
                 {
                     *pos = 0;
-                    name = qspDelSpc(line);
+                    name = qspDelSpc(data);
                     *pos = QSP_NEWLINE;
                 }
                 else
-                    name = qspDelSpc(line);
+                    name = qspDelSpc(data);
                 if (resLen)
                 {
                     /* Add an empty line to separate locations */
