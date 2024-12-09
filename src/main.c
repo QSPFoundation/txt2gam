@@ -24,7 +24,7 @@
 
 static QSP_BOOL qspLoadTextFile(char *file, QSP_BOOL isUnicode, QSP_CHAR **data);
 static QSP_BOOL qspSaveTextFile(char *file, QSP_CHAR *data, QSP_BOOL isUnicode);
-static QSP_BOOL qspExportStrings(char *file, char *outFile, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL isGetQStrings, QSP_BOOL isUnicode);
+static QSP_BOOL qspExportStrings(char *file, char *outFile, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toGetQStrings, QSP_BOOL isUnicode);
 static QSP_BOOL qspOpenQuestFromTextFile(char *file, QSP_BOOL isUnicode, QSP_CHAR *locStart, QSP_CHAR *locEnd);
 static QSP_BOOL qspSaveGameFile(char *file, QSP_BOOL isOldFormat, QSP_BOOL isUCS2, QSP_CHAR *passwd);
 static QSP_BOOL qspOpenGameFile(char *file, QSP_CHAR *password);
@@ -113,11 +113,11 @@ static QSP_BOOL qspSaveTextFile(char *file, QSP_CHAR *data, QSP_BOOL isUnicode)
     return QSP_TRUE;
 }
 
-static QSP_BOOL qspExportStrings(char *file, char *outFile, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL isGetQStrings, QSP_BOOL isUnicode)
+static QSP_BOOL qspExportStrings(char *file, char *outFile, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toGetQStrings, QSP_BOOL isUnicode)
 {
     QSP_CHAR *data, *locsStrings;
     if (!qspLoadTextFile(file, isUnicode, &data)) return QSP_FALSE;
-    locsStrings = qspGetLocsStrings(data, locStart, locEnd, isGetQStrings);
+    locsStrings = qspGetLocsStrings(data, locStart, locEnd, toGetQStrings);
     free(data);
     if (locsStrings)
     {

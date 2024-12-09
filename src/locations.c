@@ -103,7 +103,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
 {
     QSP_CHAR *name, *curStr, *pos, *res = 0, quot = 0;
     int locStartLen, locEndLen, curBufSize = 1024, curStrLen = 0, resLen = 0, quotsCount = 0, strsCount = 0, locsCount = 0;
-    QSP_BOOL isAddToString, isInLoc = QSP_FALSE;
+    QSP_BOOL toAddToString, isInLoc = QSP_FALSE;
     locStartLen = qspStrLen(locStart);
     locEndLen = qspStrLen(locEnd);
     curStr = qspAllocateBuffer(curBufSize);
@@ -160,7 +160,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
             }
             else
             {
-                isAddToString = (quotsCount > 0);
+                toAddToString = (toGetQStrings && quotsCount > 0);
                 if (*data == QSP_LQUOT)
                     ++quotsCount;
                 else if (*data == QSP_RQUOT)
@@ -168,9 +168,9 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
                     if (quotsCount)
                     {
                         --quotsCount;
-                        if (toGetQStrings && !quotsCount)
+                        if (!quotsCount)
                         {
-                            isAddToString = QSP_FALSE;
+                            toAddToString = QSP_FALSE;
                             if (curStrLen)
                             {
                                 curStr[curStrLen] = 0;
@@ -184,7 +184,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
                 }
                 else if (qspIsInList(QSP_QUOTS, *data))
                     quot = *data;
-                if (toGetQStrings && isAddToString)
+                if (toAddToString)
                 {
                     if (*data == QSP_NEWLINE)
                         curStrLen = qspAddTextToBuffer(&curStr, QSP_STRSDELIM, QSP_LEN(QSP_STRSDELIM), curStrLen, &curBufSize);
