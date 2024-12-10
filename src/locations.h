@@ -22,6 +22,7 @@
 
     #define QSP_GAMEID QSP_FMT("QSPGAME")
     #define QSP_PASSWD QSP_FMT("No")
+    #define QSP_VERINFOSIZE 100
     #define QSP_MAXACTIONS 50
 
     typedef struct

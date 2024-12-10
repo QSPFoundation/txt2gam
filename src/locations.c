@@ -463,19 +463,30 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
 
 char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUCS2, QSP_CHAR *passwd, int *dataLen)
 {
+    QSP_CHAR verInfo[QSP_VERINFOSIZE];
     int i, j, len, actsCount;
+    time_t currentTime;
+    struct tm *localTime;
     char *buf = 0;
+
+    time(&currentTime);
+    localTime = localtime(&currentTime);
+    QSP_STRFTIME(verInfo,
+        QSP_VERINFOSIZE,
+        QSP_FMT("%Y-%m-%d") QSP_FMT(" (") QSP_APPNAME QSP_FMT(" ") QSP_VER QSP_FMT(")"),
+        localTime);
+
     if (isOldFormat)
     {
         len = qspGameCodeWriteIntValLine(&buf, 0, qspLocsCount, isUCS2, QSP_FALSE);
         len = qspGameCodeWriteValLine(&buf, len, passwd, isUCS2, QSP_TRUE);
-        len = qspGameCodeWriteValLine(&buf, len, QSP_VER, isUCS2, QSP_FALSE);
+        len = qspGameCodeWriteValLine(&buf, len, verInfo, isUCS2, QSP_FALSE);
         for (i = 0; i < 27; ++i) len = qspGameCodeWriteValLine(&buf, len, 0, isUCS2, QSP_FALSE);
     }
     else
     {
         len = qspGameCodeWriteValLine(&buf, 0, QSP_GAMEID, isUCS2, QSP_FALSE);
-        len = qspGameCodeWriteValLine(&buf, len, QSP_VER, isUCS2, QSP_FALSE);
+        len = qspGameCodeWriteValLine(&buf, len, verInfo, isUCS2, QSP_FALSE);
         len = qspGameCodeWriteValLine(&buf, len, passwd, isUCS2, QSP_TRUE);
         len = qspGameCodeWriteIntValLine(&buf, len, qspLocsCount, isUCS2, QSP_TRUE);
     }

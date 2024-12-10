@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <locale.h>
 #include <string.h>
+#include <time.h>
 #include <wchar.h>
 
 #include "txt2gam_config.h"
@@ -40,6 +41,7 @@
         #define QSP_FMT2(x) L##x
         #define QSP_FMT(x) QSP_FMT2(x)
 
+        #define QSP_STRFTIME wcsftime
         #define QSP_WCSTOMBSLEN(a) wcstombs(0, a, 0)
         #define QSP_WCSTOMBS wcstombs
         #define QSP_MBSTOWCSLEN(a) mbstowcs(0, a, 0)
@@ -52,6 +54,7 @@
         typedef char QSP_CHAR;
         #define QSP_FMT(x) x
 
+        #define QSP_STRFTIME strftime
         #define QSP_WCSTOMBSLEN strlen
         #define QSP_WCSTOMBS strncpy
         #define QSP_MBSTOWCSLEN strlen
@@ -70,6 +73,7 @@
         QSP_UCS2
     };
 
+    #define QSP_APPNAME QSP_FMT("TXT2GAM")
     #define QSP_VER QSP_FMT(TXT2GAM_VER_STR)
     #define QSP_LOCALE "C" /* default locale */
 
