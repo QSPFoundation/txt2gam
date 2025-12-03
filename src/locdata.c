@@ -42,7 +42,10 @@ QSP_CHAR *qspReadString(QSP_CHAR **str)
             }
             ++ptr;
         }
-        len = qspAddCharToBuffer(&buf, *ptr, len, &bufSize);
+        if (*ptr == QSP_NEWLINE)
+            len = qspAddTextToBuffer(&buf, QSP_STRSDELIM, QSP_LEN(QSP_STRSDELIM), len, &bufSize);
+        else
+            len = qspAddCharToBuffer(&buf, *ptr, len, &bufSize);
         ++ptr;
     }
     free(buf);
