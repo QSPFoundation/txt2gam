@@ -2,7 +2,7 @@
 
 Please check [Releases](https://github.com/QSPFoundation/txt2gam/releases) section.
 
-## Linux & MacOS build
+## Linux & macOS build
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
@@ -13,7 +13,8 @@ cmake --build build
 
 ```bash
 cmake -S . -B build -G "Visual Studio 17 2022" -A Win32 -DCMAKE_INSTALL_PREFIX=out
-cmake --build build --target install --config Release
+cmake --build build --config Release
+cmake --install build --config Release
 ```
 
 ## TODO

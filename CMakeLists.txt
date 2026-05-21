@@ -46,96 +46,68 @@ endif()
 
 configure_file(txt2gam_config.h.cmakein txt2gam_config.h @ONLY)
 
-set(TXT2GAM_SOURCES
+# Library
+
+set(TXT2GAM_LIB_SOURCES
 	src/coding.c
 	src/locations.c
 	src/locdata.c
-	src/main.c
 	src/memwatch.c
 	src/text.c
 	src/sys.c
 )
-add_executable(txt2gam ${TXT2GAM_SOURCES})
-
+add_library(txt2gam ${TXT2GAM_LIB_SOURCES})
+target_compile_definitions(txt2gam PUBLIC _UNICODE)
 if (WIN32)
 	target_compile_definitions(txt2gam PRIVATE _CRT_SECURE_NO_WARNINGS)
-	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT txt2gam)
 endif()
-target_compile_definitions(txt2gam PRIVATE _UNICODE)
 if (SPEC_PASS)
 	target_compile_definitions(txt2gam PRIVATE SPEC_PASS=${SPEC_PASS})
 endif()
 target_compile_options(txt2gam PRIVATE ${PROJECT_COMPILER_FLAGS})
 target_link_options(txt2gam PRIVATE ${PROJECT_LINKER_FLAGS})
 
+target_include_directories(txt2gam
+	INTERFACE
+		"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
+		"$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
+		"$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/txt2gam>"
+)
+
+generate_export_header(txt2gam
+	BASE_NAME Txt2gam
+	EXPORT_MACRO_NAME TXT2GAM_EXTERN
+)
+
+export(TARGETS txt2gam NAMESPACE Txt2gam:: FILE "${CMAKE_CURRENT_BINARY_DIR}/Txt2gamTargets.cmake")
+
 # Installation
 
-if (WIN32)
-	set(BINDIR ${CMAKE_INSTALL_BINDIR})
-	set(LIBDIR ${CMAKE_INSTALL_LIBDIR})
-	set(RLIBDIR ${CMAKE_INSTALL_BINDIR})
-	set(HEADERDIR ${CMAKE_INSTALL_INCLUDEDIR})
-	set(DATADIR ${CMAKE_INSTALL_BINDIR})
-	set(INSTALL_RPATH "")
-elseif (APPLE)
-	set(BINDIR ${CMAKE_INSTALL_BINDIR})
-	set(LIBDIR ${CMAKE_INSTALL_LIBDIR})
-	set(RLIBDIR ${CMAKE_INSTALL_LIBDIR})
-	set(HEADERDIR ${CMAKE_INSTALL_INCLUDEDIR})
-	set(DATADIR ${CMAKE_INSTALL_DATADIR}/txt2gam)
-	set(INSTALL_RPATH "@loader_path;@loader_path/../${CMAKE_INSTALL_LIBDIR}")
-elseif (UNIX)
-	set(BINDIR ${CMAKE_INSTALL_BINDIR})
-	set(LIBDIR ${CMAKE_INSTALL_LIBDIR})
-	set(RLIBDIR ${CMAKE_INSTALL_LIBDIR})
-	set(HEADERDIR ${CMAKE_INSTALL_INCLUDEDIR})
-	set(DATADIR ${CMAKE_INSTALL_DATADIR}/txt2gam)
-	set(INSTALL_RPATH "$ORIGIN;$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
-else()
-	message(FATAL_ERROR "Platform is not supported")
-endif()
+install(TARGETS txt2gam EXPORT Txt2gamTargets)
 
-set_target_properties(txt2gam PROPERTIES INSTALL_RPATH "${INSTALL_RPATH}")
-install(TARGETS txt2gam
-		RUNTIME DESTINATION ${BINDIR}
-		LIBRARY DESTINATION ${RLIBDIR}
-		ARCHIVE DESTINATION ${LIBDIR}
-		PRIVATE_HEADER DESTINATION ${HEADERDIR}
-		PUBLIC_HEADER DESTINATION ${HEADERDIR})
-
-# Packaging
-
-if (WIN32)
-	set(CPACK_PACKAGE_NAME "TXT2GAM")
-else()
-	set(CPACK_PACKAGE_NAME "${CMAKE_PROJECT_NAME}")
-endif()
-set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "TXT2GAM tool to convert text files to QSP game files and vice versa")
-set(CPACK_PACKAGE_VENDOR "QSP Foundation")
-set(CPACK_PACKAGE_CONTACT "byte@qsp.org")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-
-set(CPACK_VERBATIM_VARIABLES ON)
-set(CPACK_STRIP_FILES ON)
-set(CPACK_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS
-		OWNER_READ OWNER_WRITE OWNER_EXECUTE
-		GROUP_READ GROUP_EXECUTE
-		WORLD_READ WORLD_EXECUTE
+install(FILES
+		src/coding.h
+		src/declarations.h
+		src/locations.h
+		src/locdata.h
+		src/sys.h
+		src/text.h
+		"${CMAKE_CURRENT_BINARY_DIR}/txt2gam_config.h"
+		"${CMAKE_CURRENT_BINARY_DIR}/txt2gam_export.h"
+	DESTINATION
+		"${CMAKE_INSTALL_INCLUDEDIR}/txt2gam"
 )
-set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
-set(CPACK_PACKAGE_EXECUTABLES txt2gam "TXT2GAM")
-set(CPACK_CREATE_DESKTOP_LINKS txt2gam)
-set(CPACK_NSIS_INSTALLED_ICON_NAME "${BINDIR}\\txt2gam.exe")
-set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
-set(CPACK_NSIS_MODIFY_PATH ON)
-set(CPACK_NSIS_MANIFEST_DPI_AWARE ON)
-set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/cmake/Txt2gam/Txt2gamConfigVersion.cmake" COMPATIBILITY AnyNewerVersion)
+configure_package_config_file(Txt2gamConfig.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/cmake/Txt2gam/Txt2gamConfig.cmake"
+	INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Txt2gam"
+)
 
-set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
-set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+install(EXPORT Txt2gamTargets FILE Txt2gamTargets.cmake NAMESPACE Txt2gam:: DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Txt2gam")
+install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cmake"
+	DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+)
 
-include(CPack)
+if (PROJECT_IS_TOP_LEVEL)
+	add_subdirectory(app)
+endif()
