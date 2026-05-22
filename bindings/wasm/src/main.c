@@ -14,16 +14,16 @@
 
 #ifdef __EMSCRIPTEN__
     #include <emscripten.h>
-    #define TXT2GAM_WASM_API EMSCRIPTEN_KEEPALIVE
+    #define T2G_WASM_API EMSCRIPTEN_KEEPALIVE
 #else
-    #define TXT2GAM_WASM_API
+    #define T2G_WASM_API
 #endif
 
-TXT2GAM_WASM_API QSP_BOOL txt2gamInit();
-TXT2GAM_WASM_API void txt2gamTerminate();
-TXT2GAM_WASM_API char *txt2gamTextToGame(const char *text, const char *locStart, const char *locEnd, QSP_BOOL isOldFormat, QSP_BOOL isUCS2, const char *password, int *outLen);
-TXT2GAM_WASM_API char *txt2gamGameToText(const char *data, int dataLen, const char *password, const char *locStart, const char *locEnd);
-TXT2GAM_WASM_API void txt2gamFreeStr(void *ptr);
+T2G_WASM_API QSP_BOOL t2gInit();
+T2G_WASM_API void t2gTerminate();
+T2G_WASM_API char *t2gTextToGame(const char *text, const char *locStart, const char *locEnd, QSP_BOOL isOldFormat, QSP_BOOL isUCS2, const char *password, int *outLen);
+T2G_WASM_API char *t2gGameToText(const char *data, int dataLen, const char *password, const char *locStart, const char *locEnd);
+T2G_WASM_API void t2gFreeStr(void *ptr);
 
 static QSP_CHAR *qspStrFromUTF8(const char *utf8Str, QSP_CHAR *defaultStr);
 
@@ -34,21 +34,21 @@ static QSP_CHAR *qspStrFromUTF8(const char *utf8Str, QSP_CHAR *defaultStr)
     return qspNewStr(defaultStr);
 }
 
-TXT2GAM_WASM_API QSP_BOOL txt2gamInit()
+T2G_WASM_API QSP_BOOL t2gInit()
 {
     qspLocs = 0;
     qspLocsCount = 0;
     return qspInitLocProcessor();
 }
 
-TXT2GAM_WASM_API void txt2gamTerminate()
+T2G_WASM_API void t2gTerminate()
 {
     qspCreateWorld(0);
     qspLocs = 0;
     qspTerminateLocProcessor();
 }
 
-TXT2GAM_WASM_API char *txt2gamTextToGame(const char *text, const char *locStart, const char *locEnd, QSP_BOOL isOldFormat, QSP_BOOL isUCS2, const char *password, int *outLen)
+T2G_WASM_API char *t2gTextToGame(const char *text, const char *locStart, const char *locEnd, QSP_BOOL isOldFormat, QSP_BOOL isUCS2, const char *password, int *outLen)
 {
     int locsCount;
     char *gameData;
@@ -111,7 +111,7 @@ TXT2GAM_WASM_API char *txt2gamTextToGame(const char *text, const char *locStart,
     return gameData;
 }
 
-TXT2GAM_WASM_API char *txt2gamGameToText(const char *data, int dataLen, const char *password, const char *locStart, const char *locEnd)
+T2G_WASM_API char *t2gGameToText(const char *data, int dataLen, const char *password, const char *locStart, const char *locEnd)
 {
     char *textData;
     QSP_CHAR *questText, *qspLocStart, *qspLocEnd, *qspPassword;
@@ -150,7 +150,7 @@ TXT2GAM_WASM_API char *txt2gamGameToText(const char *data, int dataLen, const ch
     return textData;
 }
 
-TXT2GAM_WASM_API void txt2gamFreeStr(void *ptr)
+T2G_WASM_API void t2gFreeStr(void *ptr)
 {
     free(ptr);
 }
