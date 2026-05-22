@@ -109,5 +109,9 @@ install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cmake"
 )
 
 if (PROJECT_IS_TOP_LEVEL)
-	add_subdirectory(app)
+	if (EMSCRIPTEN)
+		add_subdirectory(bindings/wasm)
+	else()
+		add_subdirectory(app)
+	endif()
 endif()

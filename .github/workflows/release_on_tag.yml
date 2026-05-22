@@ -51,6 +51,32 @@ jobs:
           make_latest: true
           body: ${{ steps.tag-data.outputs.annotation }}
           files: dist/*
+  build_wasm:
+    name: Build and upload ${{ github.ref_name }} (WASM)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Get annotation
+        id: tag-data
+        run: |
+          {
+            echo 'annotation <<EOF'
+            git for-each-ref "${GITHUB_REF}" --format '%(contents)'
+            echo 'EOF'
+          } >> "${GITHUB_OUTPUT}"
+      - name: Install Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+      - name: Build release
+        run: ./build_release_wasm.sh "${{ github.ref_name }}"
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          make_latest: true
+          body: ${{ steps.tag-data.outputs.annotation }}
+          files: dist/*
   build_macos:
     name: Build and upload ${{ github.ref_name }} (MacOS)
     runs-on: macos-latest
