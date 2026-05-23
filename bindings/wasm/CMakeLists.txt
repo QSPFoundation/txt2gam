@@ -10,7 +10,7 @@ set_target_properties(txt2gam_wasm PROPERTIES
 
 target_link_options(txt2gam_wasm PRIVATE
     "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','UTF8ToString','stringToUTF8','lengthBytesUTF8','HEAPU8']"
-    "-sEXPORTED_FUNCTIONS=['_t2gInit','_t2gTerminate','_t2gTextToGame','_t2gGameToText','_t2gFreeStr','_malloc','_free']"
+    "-sEXPORTED_FUNCTIONS=['_t2gInit','_t2gTerminate','_t2gTextToGame','_t2gGameToText','_malloc','_free']"
     "-sWASM=1"
     "-sALLOW_MEMORY_GROWTH=1"
     "-sMODULARIZE=1"

@@ -13,17 +13,12 @@
 #include "sys.h"
 #include <string.h>
 
-#ifdef __EMSCRIPTEN__
-    #include <emscripten.h>
-    #define T2G_WASM_API EMSCRIPTEN_KEEPALIVE
-#else
-    #define T2G_WASM_API
-#endif
-
-T2G_WASM_API QSP_BOOL t2gInit();
-T2G_WASM_API void t2gTerminate();
-T2G_WASM_API int t2gTextToGame(const char *text, const char *locStart, const char *locEnd, QSP_BOOL isOldFormat, QSP_BOOL isUCS2, const char *password, char *outBuf);
-T2G_WASM_API int t2gGameToText(const char *data, int dataLen, const char *password, const char *locStart, const char *locEnd, char *outBuf);
+QSP_BOOL t2gInit();
+void t2gTerminate();
+int t2gTextToGame(const char *text, const char *locStart, const char *locEnd,
+                  QSP_BOOL isOldFormat, QSP_BOOL isUCS2, const char *password, char *outBuf);
+int t2gGameToText(const char *data, int dataLen, const char *password,
+                  const char *locStart, const char *locEnd, char *outBuf);
 
 static QSP_CHAR *qspStrFromUTF8(const char *utf8Str, QSP_CHAR *defaultStr);
 
@@ -34,21 +29,22 @@ static QSP_CHAR *qspStrFromUTF8(const char *utf8Str, QSP_CHAR *defaultStr)
     return qspNewStr(defaultStr);
 }
 
-T2G_WASM_API QSP_BOOL t2gInit()
+QSP_BOOL t2gInit()
 {
     qspLocs = 0;
     qspLocsCount = 0;
     return qspInitLocProcessor();
 }
 
-T2G_WASM_API void t2gTerminate()
+void t2gTerminate()
 {
     qspCreateWorld(0);
     qspLocs = 0;
     qspTerminateLocProcessor();
 }
 
-T2G_WASM_API int t2gTextToGame(const char *text, const char *locStart, const char *locEnd, QSP_BOOL isOldFormat, QSP_BOOL isUCS2, const char *password, char *outBuf)
+int t2gTextToGame(const char *text, const char *locStart, const char *locEnd,
+                  QSP_BOOL isOldFormat, QSP_BOOL isUCS2, const char *password, char *outBuf)
 {
     int locsCount, len;
     char *gameData;
@@ -114,7 +110,8 @@ T2G_WASM_API int t2gTextToGame(const char *text, const char *locStart, const cha
     return len;
 }
 
-T2G_WASM_API int t2gGameToText(const char *data, int dataLen, const char *password, const char *locStart, const char *locEnd, char *outBuf)
+int t2gGameToText(const char *data, int dataLen, const char *password,
+                  const char *locStart, const char *locEnd, char *outBuf)
 {
     int len;
     char *textData;
