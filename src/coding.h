@@ -12,13 +12,11 @@
 
     #define QSP_CODREMOV 5
 
-    extern wchar_t qspCP1251ToUCS2LETable[];
+    extern char16_t qspCP1251ToUTF16LETable[];
 
     /* External functions */
-    wchar_t qspDirectConvertUC(char, wchar_t *);
-    char qspReverseConvertUC(wchar_t, wchar_t *);
-    char *qspFromQSPString(QSP_CHAR *);
-    QSP_CHAR *qspToQSPString(char *);
+    char16_t qspDirectConvertUC(char, char16_t *);
+    char qspReverseConvertUC(char16_t, char16_t *);
     char *qspQSPToGameString(QSP_CHAR *, QSP_BOOL, QSP_BOOL);
     QSP_CHAR *qspGameToQSPString(char *, QSP_BOOL, QSP_BOOL);
     int qspSplitGameStr(char *, QSP_BOOL, QSP_CHAR *, char ***);

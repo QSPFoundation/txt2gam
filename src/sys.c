@@ -42,15 +42,10 @@ void qspPrint(const char *format, ...)
                 }
             case 's':
                 {
-#ifdef _UNICODE
                     QSP_CHAR *val = va_arg(arg_list, QSP_CHAR *);
                     char *utf8 = qspQSPStringToUTF8(val);
                     printf("%s", utf8);
                     free(utf8);
-#else
-                    char *val = va_arg(arg_list, char *);
-                    printf("%s", val);
-#endif
                     break;
                 }
             default:
