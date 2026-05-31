@@ -6,51 +6,31 @@
  */
 
 /**
- * Txt2gam — JavaScript API class injected into the Emscripten module via
- * --post-js. All WASM heap allocation and deallocation is handled internally.
+ * Txt2gam — injected via --post-js into the Emscripten module.
  *
- * QSP_CHAR is char16_t (a fixed 2-byte UTF-16LE code unit) on every platform.
- *
- * Usage:
  *   const module = await createT2gModule();
  *   const t2g = new module.Txt2gam();
- *
- *   // JS string → binary game data
- *   const gameBytes = t2g.textToGame(textString, null, null, false, false, null);
- *
- *   // binary game data → JS string
+ *   const gameBytes = t2g.textToGame(text, null, null, false, false, null);
  *   const text = t2g.gameToText(gameUint8Array, null, null, null);
- *
- *   t2g.destroy(); // releases library resources
+ *   t2g.destroy();
  */
 
 (function () {
-    /**
-     * Copy a JS string into a fresh malloc'd null-terminated QSP_CHAR (UTF-16LE)
-     * buffer on the WASM heap. Returns 0 when str is null (treated as "use default").
-     */
+    /* Allocate a null-terminated UTF-16LE buffer for str. Returns 0 for null/undefined. */
     function allocStr(str) {
-        if (!str) return 0;
-        /* lengthBytesUTF16 returns byte count excluding the null terminator. */
+        if (str == null) return 0;
         var byteLen = Module.lengthBytesUTF16(str) + 2; /* +2 for null char16_t */
         var ptr = Module._malloc(byteLen);
         Module.stringToUTF16(str, ptr, byteLen);
         return ptr;
     }
 
-    /**
-     * Copy a Uint8Array into a fresh malloc'd buffer on the WASM heap.
-     */
     function allocBytes(bytes) {
         var ptr = Module._malloc(bytes.length);
         Module.HEAPU8.set(bytes, ptr);
         return ptr;
     }
 
-    /**
-     * Copy len bytes from the WASM heap at ptr into a new Uint8Array, then
-     * free the WASM buffer.
-     */
     function consumeBytes(ptr, len) {
         var result = Module.HEAPU8.slice(ptr, ptr + len);
         Module._free(ptr);
@@ -59,29 +39,27 @@
 
     Module['Txt2gam'] = /** @class */ (function () {
         function Txt2gam() {
-            Module._t2gInit();
+            if (!Module._t2gInit()) throw new Error('TXT2GAM: initialisation failed');
         }
 
-        /** Release all library resources. Call when done. */
+        /** Free library resources. */
         Txt2gam.prototype.destroy = function () {
             Module._t2gTerminate();
         };
 
         /**
-         * Parse raw text bytes (with optional BOM) into a JS string.
-         * Detects UTF-16 LE BOM (FF FE), UTF-8 BOM (EF BB BF), or falls back
-         * to UTF-8 / ANSI depending on isUnicode.
+         * Parse raw text bytes into a JS string. Encoding is auto-detected from
+         * BOM (UTF-16 LE FF FE, UTF-8 EF BB BF) or the isUnicode fallback.
          *
-         * @param {Uint8Array} textBytes   Raw text file bytes.
-         * @param {boolean} isUnicode      True = UTF-8 fallback, false = ANSI fallback.
-         * @returns {string|null}          Parsed text, or null on error.
+         * @param {Uint8Array} textBytes
+         * @param {boolean} isUnicode  True = UTF-8 fallback, false = ANSI fallback.
+         * @returns {string|null}
          */
         Txt2gam.prototype.parseText = function (textBytes, isUnicode) {
             var dataPtr = allocBytes(textBytes);
             var resultPtr = Module._t2gParseTextData(dataPtr, textBytes.length, isUnicode ? 1 : 0);
             Module._free(dataPtr);
             if (!resultPtr) return null;
-            /* Result is a null-terminated QSP_CHAR (char16_t = 2 bytes) string. */
             var i = resultPtr >> 1; /* HEAPU16 index */
             var end = i;
             while (Module.HEAPU16[end]) end++;
@@ -94,13 +72,13 @@
         /**
          * Convert a text source to QSP binary game data.
          *
-         * @param {string} text            Source text.
+         * @param {string} text
          * @param {string|null} locStart   Location-start marker, or null for "#".
          * @param {string|null} locEnd     Location-end marker, or null for "--".
-         * @param {boolean} isOldFormat    True to save in old QSP format.
+         * @param {boolean} isOldFormat
          * @param {boolean} isUnicode      True to encode game in Unicode.
          * @param {string|null} password   Password, or null for "No".
-         * @returns {Uint8Array|null}      Binary game data, or null on error.
+         * @returns {Uint8Array|null}
          */
         Txt2gam.prototype.textToGame = function (text, locStart, locEnd, isOldFormat, isUnicode, password) {
             var textPtr     = allocStr(text);
@@ -134,11 +112,11 @@
         /**
          * Convert QSP binary game data to a text string.
          *
-         * @param {Uint8Array} gameBytes   Raw QSP game file bytes.
+         * @param {Uint8Array} gameBytes
          * @param {string|null} password   Password, or null for "No".
          * @param {string|null} locStart   Location-start marker, or null for "#".
          * @param {string|null} locEnd     Location-end marker, or null for "--".
-         * @returns {string|null}          Decoded text, or null on error.
+         * @returns {string|null}
          */
         Txt2gam.prototype.gameToText = function (gameBytes, password, locStart, locEnd) {
             var dataPtr     = allocBytes(gameBytes);
@@ -163,7 +141,6 @@
                 return null;
             }
 
-            /* outLen is in QSP_CHAR units (char16_t = 2 bytes); exclude null terminator. */
             var outLen = Module.HEAP32[outLenPtr >> 2];
             Module._free(outLenPtr);
 
@@ -174,13 +151,13 @@
         };
 
         /**
-         * Extract the in-game strings (or q-strings) from a text source.
+         * Extract in-game strings (or q-strings) from a text source.
          *
-         * @param {string} text            Source text.
+         * @param {string} text
          * @param {string|null} locStart   Location-start marker, or null for "#".
          * @param {string|null} locEnd     Location-end marker, or null for "--".
          * @param {boolean} toGetQStrings  True to extract q-strings, false for strings.
-         * @returns {string|null}          Extracted strings (possibly empty), or null on error.
+         * @returns {string|null}          Extracted strings, or null on error.
          */
         Txt2gam.prototype.extractStrings = function (text, locStart, locEnd, toGetQStrings) {
             var textPtr     = allocStr(text);
@@ -202,7 +179,6 @@
                 return null;
             }
 
-            /* outLen is in QSP_CHAR units (char16_t = 2 bytes); exclude null terminator. */
             var outLen = Module.HEAP32[outLenPtr >> 2];
             Module._free(outLenPtr);
 
