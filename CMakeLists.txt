@@ -10,6 +10,10 @@ include(CMakePackageConfigHelpers)
 include(GenerateExportHeader)
 include(GNUInstallDirs)
 
+# char16_t / <uchar.h> require C11
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
@@ -53,11 +57,11 @@ set(TXT2GAM_LIB_SOURCES
 	src/locations.c
 	src/locdata.c
 	src/memwatch.c
+	src/t2g_api.c
 	src/text.c
 	src/sys.c
 )
 add_library(txt2gam ${TXT2GAM_LIB_SOURCES})
-target_compile_definitions(txt2gam PUBLIC _UNICODE)
 if (WIN32)
 	target_compile_definitions(txt2gam PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
@@ -91,6 +95,8 @@ install(FILES
 		src/locations.h
 		src/locdata.h
 		src/sys.h
+		src/t2g_api.h
+		src/t2g_types.h
 		src/text.h
 		"${CMAKE_CURRENT_BINARY_DIR}/txt2gam_config.h"
 		"${CMAKE_CURRENT_BINARY_DIR}/txt2gam_export.h"
@@ -109,5 +115,10 @@ install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cmake"
 )
 
 if (PROJECT_IS_TOP_LEVEL)
-	add_subdirectory(app)
+	if (EMSCRIPTEN)
+		add_subdirectory(bindings/wasm)
+	else()
+		add_subdirectory(bindings/default)
+		add_subdirectory(app)
+	endif()
 endif()
