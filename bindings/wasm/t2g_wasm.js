@@ -31,20 +31,34 @@
         return ptr;
     }
 
-    function consumeBytes(ptr, len) {
+    function consumeBytes(ptr, lenPtr) {
+        if (!ptr) return null;
+        var len = Module.HEAP32[lenPtr >> 2];
         var result = Module.HEAPU8.slice(ptr, ptr + len);
         Module._free(ptr);
         return result;
     }
 
+    function consumeStr(ptr, lenPtr) {
+        if (!ptr) return null;
+        var len = Module.HEAP32[lenPtr >> 2];
+        var bytes = Module.HEAPU8.slice(ptr, ptr + len * 2);
+        Module._free(ptr);
+        return new TextDecoder('utf-16le').decode(bytes);
+    }
+
     Module['Txt2gam'] = /** @class */ (function () {
         function Txt2gam() {
             if (!Module._t2gInit()) throw new Error('TXT2GAM: initialisation failed');
+            /* Reusable 4-byte cell for the out-length of every call. */
+            this.lenPtr = Module._malloc(4);
         }
 
         /** Free library resources. */
         Txt2gam.prototype.destroy = function () {
             Module._t2gTerminate();
+            Module._free(this.lenPtr);
+            this.lenPtr = 0;
         };
 
         /**
@@ -57,16 +71,9 @@
          */
         Txt2gam.prototype.parseText = function (textBytes, isUnicode) {
             var dataPtr = allocBytes(textBytes);
-            var resultPtr = Module._t2gParseTextData(dataPtr, textBytes.length, isUnicode ? 1 : 0);
+            var resultPtr = Module._t2gWasmParseTextData(dataPtr, textBytes.length, isUnicode ? 1 : 0, this.lenPtr);
             Module._free(dataPtr);
-            if (!resultPtr) return null;
-            var i = resultPtr >> 1; /* HEAPU16 index */
-            var end = i;
-            while (Module.HEAPU16[end]) end++;
-            var bytes = Module.HEAPU8.slice(resultPtr, resultPtr + (end - i) * 2);
-            var result = new TextDecoder('utf-16le').decode(bytes);
-            Module._free(resultPtr);
-            return result;
+            return consumeStr(resultPtr, this.lenPtr);
         };
 
         /**
@@ -85,12 +92,10 @@
             var locStartPtr = allocStr(locStart);
             var locEndPtr   = allocStr(locEnd);
             var passwdPtr   = allocStr(password);
-            var outLenPtr   = Module._malloc(4);
 
-            var resultPtr = Module._t2gEncodeTextToGame(
+            var resultPtr = Module._t2gWasmEncodeTextToGame(
                 textPtr, locStartPtr, locEndPtr,
-                isOldFormat ? 1 : 0, isUnicode ? 1 : 0,
-                passwdPtr, outLenPtr
+                isOldFormat ? 1 : 0, isUnicode ? 1 : 0, passwdPtr, this.lenPtr
             );
 
             Module._free(textPtr);
@@ -98,15 +103,7 @@
             Module._free(locEndPtr);
             Module._free(passwdPtr);
 
-            if (!resultPtr) {
-                Module._free(outLenPtr);
-                return null;
-            }
-
-            var outLen = Module.HEAP32[outLenPtr >> 2];
-            Module._free(outLenPtr);
-
-            return consumeBytes(resultPtr, outLen);
+            return consumeBytes(resultPtr, this.lenPtr);
         };
 
         /**
@@ -123,12 +120,10 @@
             var passwdPtr   = allocStr(password);
             var locStartPtr = allocStr(locStart);
             var locEndPtr   = allocStr(locEnd);
-            var outLenPtr   = Module._malloc(4);
 
-            var resultPtr = Module._t2gDecodeGameToText(
+            var resultPtr = Module._t2gWasmDecodeGameToText(
                 dataPtr, gameBytes.length,
-                passwdPtr, locStartPtr, locEndPtr,
-                outLenPtr
+                passwdPtr, locStartPtr, locEndPtr, this.lenPtr
             );
 
             Module._free(dataPtr);
@@ -136,18 +131,7 @@
             Module._free(locStartPtr);
             Module._free(locEndPtr);
 
-            if (!resultPtr) {
-                Module._free(outLenPtr);
-                return null;
-            }
-
-            var outLen = Module.HEAP32[outLenPtr >> 2];
-            Module._free(outLenPtr);
-
-            var bytes = Module.HEAPU8.slice(resultPtr, resultPtr + (outLen - 1) * 2);
-            var result = new TextDecoder('utf-16le').decode(bytes);
-            Module._free(resultPtr);
-            return result;
+            return consumeStr(resultPtr, this.lenPtr);
         };
 
         /**
@@ -163,29 +147,16 @@
             var textPtr     = allocStr(text);
             var locStartPtr = allocStr(locStart);
             var locEndPtr   = allocStr(locEnd);
-            var outLenPtr   = Module._malloc(4);
 
-            var resultPtr = Module._t2gExtractStrings(
-                textPtr, locStartPtr, locEndPtr,
-                toGetQStrings ? 1 : 0, outLenPtr
+            var resultPtr = Module._t2gWasmExtractStrings(
+                textPtr, locStartPtr, locEndPtr, toGetQStrings ? 1 : 0, this.lenPtr
             );
 
             Module._free(textPtr);
             Module._free(locStartPtr);
             Module._free(locEndPtr);
 
-            if (!resultPtr) {
-                Module._free(outLenPtr);
-                return null;
-            }
-
-            var outLen = Module.HEAP32[outLenPtr >> 2];
-            Module._free(outLenPtr);
-
-            var bytes = Module.HEAPU8.slice(resultPtr, resultPtr + (outLen - 1) * 2);
-            var result = new TextDecoder('utf-16le').decode(bytes);
-            Module._free(resultPtr);
-            return result;
+            return consumeStr(resultPtr, this.lenPtr);
         };
 
         return Txt2gam;

@@ -5,11 +5,45 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-/*
- * WASM binding stub.
- *
- * All exported symbols (_t2gInit, _t2gTerminate, _t2gParseTextData,
- * _t2gEncodeTextToGame, _t2gDecodeGameToText, _t2gExtractStrings) come from the txt2gam library
- * and are listed in EXPORTED_FUNCTIONS in CMakeLists.txt. The JavaScript
- * Txt2gam class is injected via --post-js t2g_wasm.js.
- */
+#include "t2g_api.h"
+
+static int t2gWasmStrLen(const QSP_CHAR *s)
+{
+    const QSP_CHAR *ptr = s;
+    while (*ptr) ++ptr;
+    return (int)(ptr - s);
+}
+
+QSP_CHAR *t2gWasmParseTextData(const char *data, int dataLen, QSP_BOOL isUnicode, int *outLen)
+{
+    QSP_CHAR *result = t2gParseTextData(data, dataLen, isUnicode);
+    *outLen = result ? t2gWasmStrLen(result) : 0;
+    return result;
+}
+
+char *t2gWasmEncodeTextToGame(const QSP_CHAR *text, const QSP_CHAR *locStart, const QSP_CHAR *locEnd,
+                              QSP_BOOL isOldFormat, QSP_BOOL isUnicode, const QSP_CHAR *password, int *outLen)
+{
+    int len = 0;
+    char *result = t2gEncodeTextToGame(text, locStart, locEnd, isOldFormat, isUnicode, password, &len);
+    *outLen = len;
+    return result;
+}
+
+QSP_CHAR *t2gWasmDecodeGameToText(const char *data, int dataLen, const QSP_CHAR *password,
+                                  const QSP_CHAR *locStart, const QSP_CHAR *locEnd, int *outLen)
+{
+    int len = 0;
+    QSP_CHAR *result = t2gDecodeGameToText(data, dataLen, password, locStart, locEnd, &len);
+    *outLen = len > 0 ? len - 1 : 0;
+    return result;
+}
+
+QSP_CHAR *t2gWasmExtractStrings(const QSP_CHAR *text, const QSP_CHAR *locStart,
+                                const QSP_CHAR *locEnd, QSP_BOOL toGetQStrings, int *outLen)
+{
+    int len = 0;
+    QSP_CHAR *result = t2gExtractStrings(text, locStart, locEnd, toGetQStrings, &len);
+    *outLen = len > 0 ? len - 1 : 0;
+    return result;
+}
