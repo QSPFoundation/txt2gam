@@ -322,7 +322,7 @@ char *qspQSPStringToUTF8(QSP_CHAR *s)
         }
     }
     ret[len] = 0;
-    return ret;
+    return (char *)realloc(ret, len + 1);
 }
 
 QSP_CHAR *qspUTF8ToQSPString(char *s)
@@ -359,5 +359,5 @@ QSP_CHAR *qspUTF8ToQSPString(char *s)
         }
     }
     ret[len] = 0;
-    return ret;
+    return (QSP_CHAR *)realloc(ret, (len + 1) * sizeof(QSP_CHAR));
 }

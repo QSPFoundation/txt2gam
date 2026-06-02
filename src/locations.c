@@ -15,6 +15,12 @@ QSPLocation *qspLocs = 0;
 int qspLocsCount = 0;
 
 static QSP_BOOL qspCheckQuest(char **strs, int count, QSP_BOOL isUnicode, QSP_CHAR *password);
+static void qspInitLocation(QSPLocation *loc);
+
+static void qspInitLocation(QSPLocation *loc)
+{
+    memset(loc, 0, sizeof(QSPLocation));
+}
 
 static QSP_BOOL qspCheckQuest(char **strs, int count, QSP_BOOL isUnicode, QSP_CHAR *password)
 {
@@ -81,18 +87,7 @@ void qspCreateWorld(int locsCount)
         }
     }
     for (i = 0; i < qspLocsCount; ++i)
-    {
-        qspLocs[i].Name = 0;
-        qspLocs[i].Desc = 0;
-        qspLocs[i].OnVisit = 0;
-        qspLocs[i].ActionsCount = 0;
-        for (j = 0; j < QSP_MAXACTIONS; ++j)
-        {
-            qspLocs[i].Actions[j].Image = 0;
-            qspLocs[i].Actions[j].Desc = 0;
-            qspLocs[i].Actions[j].Code = 0;
-        }
-    }
+        qspInitLocation(qspLocs + i);
 }
 
 QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toGetQStrings)
@@ -209,7 +204,7 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
 int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toFill)
 {
     QSP_CHAR *locCode, *pos, quot = 0;
-    int locStartLen, locEndLen, locBufSize = 1024, locCodeLen = 0, quotsCount = 0, curLoc = 0;
+    int locStartLen, locEndLen, locBufSize = 1024, locCodeLen = 0, quotsCount = 0, curLoc = 0, locCapacity = qspLocsCount;
     QSP_BOOL isNewLine = QSP_TRUE, isInLoc = QSP_FALSE, isInBaseSection = QSP_FALSE, isInBaseAction = QSP_FALSE;
     locStartLen = qspStrLen(locStart);
     locEndLen = qspStrLen(locEnd);
@@ -384,6 +379,13 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
             {
                 if (toFill)
                 {
+                    if (curLoc >= locCapacity)
+                    {
+                        locCapacity += 32;
+                        qspLocs = (QSPLocation *)realloc(qspLocs, locCapacity * sizeof(QSPLocation));
+                    }
+                    qspInitLocation(qspLocs + curLoc);
+                    qspLocsCount = curLoc + 1;
                     data += locStartLen;
                     if (pos)
                     {
@@ -425,6 +427,8 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
     if (toFill)
     {
         free(locCode);
+        if (locCapacity > qspLocsCount)
+            qspLocs = (QSPLocation *)realloc(qspLocs, qspLocsCount * sizeof(QSPLocation));
         qspPrint("%d locations were loaded\n", curLoc);
     }
 
@@ -568,8 +572,9 @@ QSP_BOOL qspOpenQuest(char *data, int dataSize, QSP_CHAR *password)
 QSP_CHAR *qspSaveQuestAsText(QSP_CHAR *locStart, QSP_CHAR *locEnd)
 {
     QSP_BOOL hasBaseDesc;
-    int i, j, k, linesCount, baseActsCount, len = 0, bufSize = 4096;
-    QSP_CHAR *temp, **lines, *buf = qspAllocateBuffer(bufSize);
+    int i, j, k, baseActsCount, linesCount, len = 0, bufSize = 4096;
+    QSP_CHAR **lines;
+    QSP_CHAR *temp, *buf = qspAllocateBuffer(bufSize);
     for (i = 0; i < qspLocsCount; ++i)
     {
         qspPrint("Saving location: %s\n", qspLocs[i].Name);
@@ -669,5 +674,6 @@ QSP_CHAR *qspSaveQuestAsText(QSP_CHAR *locStart, QSP_CHAR *locEnd)
 
     qspPrint("%d locations were saved, total length: %d characters\n", qspLocsCount, len);
 
-    return buf;
+    buf[len] = 0;
+    return (QSP_CHAR *)realloc(buf, (len + 1) * sizeof(QSP_CHAR));
 }

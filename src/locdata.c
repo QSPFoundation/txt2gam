@@ -28,7 +28,7 @@ QSP_CHAR *qspReadString(QSP_CHAR **str)
             {
                 buf[len] = 0;
                 *str = qspSkipSpaces(ptr + 1);
-                return buf;
+                return (QSP_CHAR *)realloc(buf, (len + 1) * sizeof(QSP_CHAR));
             }
             ++ptr;
         }

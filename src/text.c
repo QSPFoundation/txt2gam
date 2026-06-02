@@ -51,7 +51,7 @@ int qspAddCharToBuffer(QSP_CHAR **buf, QSP_CHAR ch, int strLen, int *bufSize)
 {
     if (++strLen >= *bufSize)
     {
-        *bufSize += 2048;
+        *bufSize += 4096;
         *buf = (QSP_CHAR *)realloc(*buf, *bufSize * sizeof(QSP_CHAR));
     }
     (*buf)[strLen - 1] = ch;
@@ -66,7 +66,7 @@ int qspAddTextToBuffer(QSP_CHAR **buf, QSP_CHAR *val, int valLen, int strLen, in
     ret = strLen + valLen;
     if (ret >= *bufSize)
     {
-        *bufSize = ret + 2048;
+        *bufSize = ret + 4096;
         destPtr = (QSP_CHAR *)realloc(destPtr, *bufSize * sizeof(QSP_CHAR));
         *buf = destPtr;
     }

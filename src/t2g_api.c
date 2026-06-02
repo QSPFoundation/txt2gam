@@ -77,7 +77,7 @@ void t2gTerminate(void)
 char *t2gEncodeTextToGame(const QSP_CHAR *text, const QSP_CHAR *locStart, const QSP_CHAR *locEnd,
                           QSP_BOOL isOldFormat, QSP_BOOL isUnicode, const QSP_CHAR *password, int *outLen)
 {
-    int locsCount, len;
+    int len;
     char *gameData;
     QSP_CHAR *textData, *qspLocStart, *qspLocEnd, *qspPassword;
     if (!text || !outLen) return 0;
@@ -87,11 +87,7 @@ char *t2gEncodeTextToGame(const QSP_CHAR *text, const QSP_CHAR *locStart, const 
     qspLocStart = locStart ? qspNewStr((QSP_CHAR *)locStart) : qspNewStr(T2G_STARTLOC);
     qspLocEnd   = locEnd   ? qspNewStr((QSP_CHAR *)locEnd)   : qspNewStr(T2G_ENDLOC);
     qspPassword = password ? qspNewStr((QSP_CHAR *)password) : qspNewStr(QSP_PASSWD);
-    locsCount = qspOpenTextData(textData, qspLocStart, qspLocEnd, QSP_FALSE);
-#ifdef _DEBUG
-    qspPrint("Found %d locations\n", locsCount);
-#endif
-    qspCreateWorld(locsCount);
+    qspCreateWorld(0);
     qspOpenTextData(textData, qspLocStart, qspLocEnd, QSP_TRUE);
     free(textData);
     gameData = qspSaveQuest(isOldFormat, isUnicode, qspPassword, &len);
