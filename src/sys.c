@@ -43,7 +43,7 @@ void qspPrint(const char *format, ...)
             case 's':
                 {
                     QSP_CHAR *val = va_arg(arg_list, QSP_CHAR *);
-                    char *utf8 = qspQSPStringToUTF8(val);
+                    char *utf8 = qspQSPStringToUTF8(val, -1);
                     printf("%s", utf8);
                     free(utf8);
                     break;

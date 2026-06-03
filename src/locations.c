@@ -26,19 +26,19 @@ static QSP_BOOL qspCheckQuest(char **strs, int count, QSP_BOOL isUnicode, QSP_CH
 {
     int i, ind, locsCount, actsCount;
     QSP_BOOL isOldFormat, hasInvalidPassword;
-    QSP_CHAR *buf = qspGameToQSPString(strs[0], isUnicode, QSP_FALSE);
+    QSP_CHAR *buf = qspGameToQSPString(strs[0], -1, isUnicode, QSP_FALSE);
     isOldFormat = qspStrsComp(buf, QSP_GAMEID) != 0;
     free(buf);
     ind = (isOldFormat ? 30 : 4);
     if (ind > count) return QSP_FALSE;
-    buf = (isOldFormat ? qspGameToQSPString(strs[1], isUnicode, QSP_TRUE) : qspGameToQSPString(strs[2], isUnicode, QSP_TRUE));
+    buf = (isOldFormat ? qspGameToQSPString(strs[1], -1, isUnicode, QSP_TRUE) : qspGameToQSPString(strs[2], -1, isUnicode, QSP_TRUE));
     hasInvalidPassword = qspStrsComp(buf, password);
     free(buf);
 #ifdef SPEC_PASS
     hasInvalidPassword = hasInvalidPassword && qspStrsComp(QSP_FMT(SPEC_PASS), password);
 #endif
     if (hasInvalidPassword) return QSP_FALSE;
-    buf = (isOldFormat ? qspGameToQSPString(strs[0], isUnicode, QSP_FALSE) : qspGameToQSPString(strs[3], isUnicode, QSP_TRUE));
+    buf = (isOldFormat ? qspGameToQSPString(strs[0], -1, isUnicode, QSP_FALSE) : qspGameToQSPString(strs[3], -1, isUnicode, QSP_TRUE));
     locsCount = qspStrToNum(buf, 0);
     free(buf);
     if (locsCount <= 0) return QSP_FALSE;
@@ -50,7 +50,7 @@ static QSP_BOOL qspCheckQuest(char **strs, int count, QSP_BOOL isUnicode, QSP_CH
         else
         {
             if (ind + 1 > count) return QSP_FALSE;
-            buf = qspGameToQSPString(strs[ind++], isUnicode, QSP_TRUE);
+            buf = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
             actsCount = qspStrToNum(buf, 0);
             free(buf);
             if (actsCount < 0 || actsCount > QSP_MAXACTIONS) return QSP_FALSE;
@@ -448,7 +448,7 @@ char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUnicode, QSP_CHAR *passwd, i
     localTime = localtime(&currentTime);
     strftime(dateBuf, QSP_DATESTRSIZE, "%Y-%m-%d", localTime);
     snprintf(narrowInfo, QSP_VERINFOSIZE, "%s (%s %s)", dateBuf, QSP_APPNAME, TXT2GAM_VER_STR);
-    verInfo = qspUTF8ToQSPString(narrowInfo);
+    verInfo = qspUTF8ToQSPString(narrowInfo, -1);
 
     if (isOldFormat)
     {
@@ -524,25 +524,25 @@ QSP_BOOL qspOpenQuest(char *data, int dataSize, QSP_CHAR *password)
     char **strs;
     /* Parse the data */
     if (dataSize < 2) return QSP_FALSE;
-    count = qspSplitGameStr(data, isUnicode = !data[1], QSP_STRSDELIM, &strs);
+    count = qspSplitGameData(data, dataSize, isUnicode = !data[1], &strs);
     if (!qspCheckQuest(strs, count, isUnicode, password))
     {
         qspFreeStrs((void **)strs, count);
         return QSP_FALSE;
     }
-    buf = qspGameToQSPString(strs[0], isUnicode, QSP_FALSE);
+    buf = qspGameToQSPString(strs[0], -1, isUnicode, QSP_FALSE);
     isOldFormat = qspStrsComp(buf, QSP_GAMEID) != 0;
     free(buf);
-    buf = (isOldFormat ? qspGameToQSPString(strs[0], isUnicode, QSP_FALSE) : qspGameToQSPString(strs[3], isUnicode, QSP_TRUE));
+    buf = (isOldFormat ? qspGameToQSPString(strs[0], -1, isUnicode, QSP_FALSE) : qspGameToQSPString(strs[3], -1, isUnicode, QSP_TRUE));
     locsCount = qspStrToNum(buf, 0);
     free(buf);
     qspCreateWorld(locsCount);
     ind = (isOldFormat ? 30 : 4);
     for (i = 0; i < locsCount; ++i)
     {
-        qspLocs[i].Name = qspGameToQSPString(strs[ind++], isUnicode, QSP_TRUE);
-        qspLocs[i].Desc = qspGameToQSPString(strs[ind++], isUnicode, QSP_TRUE);
-        qspLocs[i].OnVisit = qspGameToQSPString(strs[ind++], isUnicode, QSP_TRUE);
+        qspLocs[i].Name = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
+        qspLocs[i].Desc = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
+        qspLocs[i].OnVisit = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
 
         qspPrint("Location: %s\n", qspLocs[i].Name);
 
@@ -550,16 +550,16 @@ QSP_BOOL qspOpenQuest(char *data, int dataSize, QSP_CHAR *password)
             actsCount = 20;
         else
         {
-            buf = qspGameToQSPString(strs[ind++], isUnicode, QSP_TRUE);
+            buf = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
             actsCount = qspStrToNum(buf, 0);
             free(buf);
         }
         qspLocs[i].ActionsCount = actsCount;
         for (j = 0; j < actsCount; ++j)
         {
-            qspLocs[i].Actions[j].Image = (isOldFormat ? 0 : qspGameToQSPString(strs[ind++], isUnicode, QSP_TRUE));
-            qspLocs[i].Actions[j].Desc = qspGameToQSPString(strs[ind++], isUnicode, QSP_TRUE);
-            qspLocs[i].Actions[j].Code = qspGameToQSPString(strs[ind++], isUnicode, QSP_TRUE);
+            qspLocs[i].Actions[j].Image = (isOldFormat ? 0 : qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE));
+            qspLocs[i].Actions[j].Desc = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
+            qspLocs[i].Actions[j].Code = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
         }
     }
 

@@ -29,7 +29,6 @@ char16_t qspCP1251ToUTF16LETable[] =
 };
 
 static int qspUTF16StrLen(char *);
-static char *qspUTF16StrStr(char *, char *);
 static int qspAddGameText(char **, char *, QSP_BOOL, int, int, QSP_BOOL);
 
 static int qspUTF16StrLen(char *str)
@@ -37,21 +36,6 @@ static int qspUTF16StrLen(char *str)
     char16_t *ptr = (char16_t *)str;
     while (*ptr) ++ptr;
     return (int)(ptr - (char16_t *)str);
-}
-
-static char *qspUTF16StrStr(char *str, char *subStr)
-{
-    char16_t *s1, *s2, *cp = (char16_t *)str;
-    while (*cp)
-    {
-        s1 = cp;
-        s2 = (char16_t *)subStr;
-        while (*s1 && *s2 && !(*s1 - *s2))
-            ++s1, ++s2;
-        if (!(*s2)) return (char *)cp;
-        ++cp;
-    }
-    return 0;
 }
 
 char16_t qspDirectConvertUC(char ch, char16_t *table)
@@ -69,11 +53,12 @@ char qspReverseConvertUC(char16_t ch, char16_t *table)
     return 0x20;
 }
 
-char *qspQSPToGameString(QSP_CHAR *s, QSP_BOOL isUnicode, QSP_BOOL isCode)
+char *qspQSPToGameString(QSP_CHAR *s, int len, QSP_BOOL isUnicode, QSP_BOOL isCode)
 {
     char16_t uCh, *ptr;
-    int len = qspStrLen(s);
-    char ch, *ret = (char *)malloc((len + 1) * (isUnicode ? 2 : 1));
+    char ch, *ret;
+    if (len < 0) len = qspStrLen(s);
+    ret = (char *)malloc((len + 1) * (isUnicode ? 2 : 1));
     if (isUnicode)
     {
         ptr = (char16_t *)ret;
@@ -120,12 +105,13 @@ char *qspQSPToGameString(QSP_CHAR *s, QSP_BOOL isUnicode, QSP_BOOL isCode)
     return ret;
 }
 
-QSP_CHAR *qspGameToQSPString(char *s, QSP_BOOL isUnicode, QSP_BOOL isCoded)
+QSP_CHAR *qspGameToQSPString(char *s, int len, QSP_BOOL isUnicode, QSP_BOOL isCoded)
 {
     char ch;
     char16_t uCh, *ptr;
-    int len = (isUnicode ? qspUTF16StrLen(s) : (int)strlen(s));
-    QSP_CHAR *ret = (QSP_CHAR *)malloc((len + 1) * sizeof(QSP_CHAR));
+    QSP_CHAR *ret;
+    if (len < 0) len = (isUnicode ? qspUTF16StrLen(s) : (int)strlen(s));
+    ret = (QSP_CHAR *)malloc((len + 1) * sizeof(QSP_CHAR));
     ret[len] = 0;
     if (isUnicode)
     {
@@ -171,40 +157,32 @@ QSP_CHAR *qspGameToQSPString(char *s, QSP_BOOL isUnicode, QSP_BOOL isCoded)
     return ret;
 }
 
-int qspSplitGameStr(char *str, QSP_BOOL isUnicode, QSP_CHAR *delim, char ***res)
+int qspSplitGameData(char *data, int dataLen, QSP_BOOL isUnicode, char ***res)
 {
-    char *delimStr, *newStr, **ret, *found, *curPos = str;
-    int charSize, delimSize, allocChars, count = 0, bufSize = 8;
-    charSize = (isUnicode ? 2 : 1);
-    delimSize = qspStrLen(delim) * charSize;
-    delimStr = qspQSPToGameString(delim, isUnicode, QSP_FALSE);
-    found = (isUnicode ? qspUTF16StrStr(str, delimStr) : strstr(str, delimStr));
+    char *delimStr, **ret, *segStart = data, *dataEnd = data + dataLen, *pos;
+    int charSize = (isUnicode ? 2 : 1);
+    int delimSize, segSize, count = 0, bufSize = 8;
+    delimStr = qspQSPToGameString(QSP_STRSDELIM, -1, isUnicode, QSP_FALSE);
+    delimSize = QSP_LEN(QSP_STRSDELIM) * charSize;
     ret = (char **)malloc(bufSize * sizeof(char *));
-    while (found)
+    do
     {
-        allocChars = (int)(found - curPos);
-        newStr = (char *)malloc(allocChars + charSize);
-        memcpy(newStr, curPos, allocChars);
-        if (isUnicode)
-            *((char16_t *)(newStr + allocChars)) = 0;
-        else
-            newStr[allocChars] = 0;
-        if (++count > bufSize)
+        for (pos = segStart; pos + delimSize <= dataEnd; pos += charSize)
+            if (!memcmp(pos, delimStr, delimSize)) break;
+        if (pos + delimSize > dataEnd) pos = dataEnd;
+        segSize = (int)(pos - segStart);
+        if (count >= bufSize)
         {
-            bufSize <<= 1;
+            bufSize += 16;
             ret = (char **)realloc(ret, bufSize * sizeof(char *));
         }
-        ret[count - 1] = newStr;
-        curPos = found + delimSize;
-        found = (isUnicode ? qspUTF16StrStr(curPos, delimStr) : strstr(curPos, delimStr));
-    }
+        ret[count] = (char *)malloc(segSize + charSize);
+        memcpy(ret[count], segStart, segSize);
+        memset(ret[count] + segSize, 0, charSize);
+        ++count;
+        segStart = pos + delimSize;
+    } while (pos != dataEnd);
     free(delimStr);
-    allocChars = (isUnicode ? (qspUTF16StrLen(curPos) + 1) * charSize : (int)strlen(curPos) + 1);
-    newStr = (char *)malloc(allocChars);
-    memcpy(newStr, curPos, allocChars);
-    if (++count > bufSize)
-        ret = (char **)realloc(ret, count * sizeof(char *));
-    ret[count - 1] = newStr;
     *res = ret;
     return count;
 }
@@ -249,10 +227,10 @@ int qspGameCodeWriteIntValLine(char **s, int len, int val, QSP_BOOL isUnicode, Q
     char *temp;
     QSP_CHAR buf[12];
     qspNumToStr(buf, val);
-    temp = qspQSPToGameString(buf, isUnicode, isCode);
+    temp = qspQSPToGameString(buf, -1, isUnicode, isCode);
     len = qspAddGameText(s, temp, isUnicode, len, -1, QSP_FALSE);
     free(temp);
-    temp = qspQSPToGameString(QSP_STRSDELIM, isUnicode, QSP_FALSE);
+    temp = qspQSPToGameString(QSP_STRSDELIM, -1, isUnicode, QSP_FALSE);
     len = qspAddGameText(s, temp, isUnicode, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
     free(temp);
     return len;
@@ -260,7 +238,7 @@ int qspGameCodeWriteIntValLine(char **s, int len, int val, QSP_BOOL isUnicode, Q
 
 int qspGameCodeWriteVal(char **s, int len, QSP_CHAR *val, QSP_BOOL isUnicode, QSP_BOOL isCode)
 {
-    char *temp = qspQSPToGameString(val, isUnicode, isCode);
+    char *temp = qspQSPToGameString(val, -1, isUnicode, isCode);
     len = qspAddGameText(s, temp, isUnicode, len, -1, QSP_FALSE);
     free(temp);
     return len;
@@ -273,20 +251,24 @@ int qspGameCodeWriteValLine(char **s, int len, QSP_CHAR *val, QSP_BOOL isUnicode
     {
         len = qspGameCodeWriteVal(s, len, val, isUnicode, isCode);
     }
-    temp = qspQSPToGameString(QSP_STRSDELIM, isUnicode, QSP_FALSE);
+    temp = qspQSPToGameString(QSP_STRSDELIM, -1, isUnicode, QSP_FALSE);
     len = qspAddGameText(s, temp, isUnicode, len, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
     free(temp);
     return len;
 }
 
-char *qspQSPStringToUTF8(QSP_CHAR *s)
+char *qspQSPStringToUTF8(QSP_CHAR *s, int len)
 {
-    QSP_CHAR *ptr;
+    QSP_CHAR *ptr, *end;
     unsigned int codepoint = 0;
-    int len = 0, maxLen = qspStrLen(s) * 4; /* we're very conservative here */
-    char *ret = (char *)malloc(maxLen + 1);
+    int outLen = 0, maxLen;
+    char *ret;
+    if (len < 0) len = qspStrLen(s);
+    maxLen = len * 4; /* we're very conservative here */
+    ret = (char *)malloc(maxLen + 1);
     ret[maxLen] = 0;
-    for (ptr = s; *ptr; ++ptr)
+    end = s + len;
+    for (ptr = s; ptr < end; ++ptr)
     {
         if (*ptr >= 0xd800 && *ptr <= 0xdbff)
             codepoint = ((*ptr - 0xd800) << 10) + 0x10000;
@@ -298,40 +280,45 @@ char *qspQSPStringToUTF8(QSP_CHAR *s)
                 codepoint = *ptr;
 
             if (codepoint <= 0x7f)
-                ret[len++] = (char)codepoint;
+                ret[outLen++] = (char)codepoint;
             else if (codepoint <= 0x7ff)
             {
-                ret[len++] = (char)(0xc0 | ((codepoint >> 6) & 0x1f));
-                ret[len++] = (char)(0x80 | (codepoint & 0x3f));
+                ret[outLen++] = (char)(0xc0 | ((codepoint >> 6) & 0x1f));
+                ret[outLen++] = (char)(0x80 | (codepoint & 0x3f));
             }
             else if (codepoint <= 0xffff)
             {
-                ret[len++] = (char)(0xe0 | ((codepoint >> 12) & 0x0f));
-                ret[len++] = (char)(0x80 | ((codepoint >> 6) & 0x3f));
-                ret[len++] = (char)(0x80 | (codepoint & 0x3f));
+                ret[outLen++] = (char)(0xe0 | ((codepoint >> 12) & 0x0f));
+                ret[outLen++] = (char)(0x80 | ((codepoint >> 6) & 0x3f));
+                ret[outLen++] = (char)(0x80 | (codepoint & 0x3f));
             }
             else
             {
                 /* Astral codepoint (from a UTF-16 surrogate pair): 4-byte UTF-8. */
-                ret[len++] = (char)(0xf0 | ((codepoint >> 18) & 0x07));
-                ret[len++] = (char)(0x80 | ((codepoint >> 12) & 0x3f));
-                ret[len++] = (char)(0x80 | ((codepoint >> 6) & 0x3f));
-                ret[len++] = (char)(0x80 | (codepoint & 0x3f));
+                ret[outLen++] = (char)(0xf0 | ((codepoint >> 18) & 0x07));
+                ret[outLen++] = (char)(0x80 | ((codepoint >> 12) & 0x3f));
+                ret[outLen++] = (char)(0x80 | ((codepoint >> 6) & 0x3f));
+                ret[outLen++] = (char)(0x80 | (codepoint & 0x3f));
             }
             codepoint = 0;
         }
     }
-    ret[len] = 0;
-    return (char *)realloc(ret, len + 1);
+    ret[outLen] = 0;
+    return (char *)realloc(ret, outLen + 1);
 }
 
-QSP_CHAR *qspUTF8ToQSPString(char *s)
+QSP_CHAR *qspUTF8ToQSPString(char *s, int len)
 {
     unsigned int codepoint = 0;
-    int len = 0, maxLen = (int)strlen(s); /* we're very conservative here */
-    QSP_CHAR *ret = (QSP_CHAR *)malloc((maxLen + 1) * sizeof(QSP_CHAR));
+    int outLen = 0, maxLen;
+    char *end;
+    QSP_CHAR *ret;
+    if (len < 0) len = (int)strlen(s);
+    maxLen = len; /* we're very conservative here */
+    ret = (QSP_CHAR *)malloc((maxLen + 1) * sizeof(QSP_CHAR));
     ret[maxLen] = 0;
-    while (*s)
+    end = s + len;
+    while (s < end)
     {
         unsigned char ch = (unsigned char)*s;
         if (ch <= 0x7f)
@@ -345,19 +332,20 @@ QSP_CHAR *qspUTF8ToQSPString(char *s)
         else
             codepoint = ch & 0x07;
         ++s;
-        if ((*s & 0xc0) != 0x80 && codepoint <= 0x10ffff)
+        /* End of buffer counts as a non-continuation byte, flushing the codepoint. */
+        if ((s >= end || (*s & 0xc0) != 0x80) && codepoint <= 0x10ffff)
         {
             if (codepoint > 0xffff)
             {
                 /* Astral codepoint: encode as a UTF-16 surrogate pair. */
                 codepoint -= 0x10000;
-                ret[len++] = (QSP_CHAR)(0xd800 + (codepoint >> 10));
-                ret[len++] = (QSP_CHAR)(0xdc00 + (codepoint & 0x03ff));
+                ret[outLen++] = (QSP_CHAR)(0xd800 + (codepoint >> 10));
+                ret[outLen++] = (QSP_CHAR)(0xdc00 + (codepoint & 0x03ff));
             }
             else if (codepoint < 0xd800 || codepoint >= 0xe000)
-                ret[len++] = (QSP_CHAR)codepoint;
+                ret[outLen++] = (QSP_CHAR)codepoint;
         }
     }
-    ret[len] = 0;
-    return (QSP_CHAR *)realloc(ret, (len + 1) * sizeof(QSP_CHAR));
+    ret[outLen] = 0;
+    return (QSP_CHAR *)realloc(ret, (outLen + 1) * sizeof(QSP_CHAR));
 }

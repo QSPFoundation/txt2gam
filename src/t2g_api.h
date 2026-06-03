@@ -31,7 +31,7 @@
      *  3. Leading null byte heuristic → UTF-16 LE without BOM
      *  4. isUnicode fallback: QSP_TRUE → UTF-8, QSP_FALSE → ANSI/CP1251
      *
-     * data      - raw text bytes
+     * data      - raw text bytes (copied internally; not modified)
      * dataLen   - number of bytes in data
      * isUnicode - fallback when no BOM is found: QSP_TRUE = UTF-8, QSP_FALSE = ANSI
      *
@@ -44,7 +44,8 @@
     /*
      * Convert a QSP_CHAR text source to QSP binary game data.
      *
-     * text        - null-terminated QSP_CHAR source text
+     * text        - null-terminated QSP_CHAR source text (line endings must be
+     *               normalised to \n, e.g. via t2gParseTextData)
      * locStart    - null-terminated location-start marker, or 0 for T2G_STARTLOC ("#")
      * locEnd      - null-terminated location-end marker, or 0 for T2G_ENDLOC ("--")
      * isOldFormat - QSP_TRUE to save in the old QSP format, QSP_FALSE for new
@@ -62,7 +63,7 @@
     /*
      * Convert QSP binary game data to a null-terminated QSP_CHAR text source.
      *
-     * data     - raw game file bytes
+     * data     - raw game file bytes (copied internally; not modified)
      * dataLen  - number of bytes in data
      * password - null-terminated password, or 0 for the default ("No")
      * locStart - null-terminated location-start marker, or 0 for T2G_STARTLOC ("#")

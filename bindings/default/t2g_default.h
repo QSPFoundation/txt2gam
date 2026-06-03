@@ -30,12 +30,14 @@
     /*
      * Convert a text game source to a QSP binary game file using a 2-call approach.
      *
-     * text        - null-terminated QSP_CHAR source (optional UTF-8 or UTF-16 BOM is
-     *               detected automatically when loading from file)
+     * data        - raw text bytes; encoding is auto-detected from BOM, with
+     *               isUnicode as a fallback (see t2gParseTextData)
+     * dataLen     - number of bytes in data
+     * isUnicode   - fallback encoding hint: QSP_TRUE = UTF-8, QSP_FALSE = ANSI
      * locStart    - null-terminated location-start marker, or 0 for the default ("#")
      * locEnd      - null-terminated location-end marker, or 0 for the default ("--")
      * isOldFormat - QSP_TRUE to save in the old QSP format, QSP_FALSE for new
-     * isUnicode   - QSP_TRUE to encode game strings as UTF-16, QSP_FALSE for ANSI
+     * isUnicodeOut - QSP_TRUE to encode game strings as UTF-16, QSP_FALSE for ANSI
      * password    - null-terminated password, or 0 for the default ("No")
      * outBuf      - 0 on the first call (size query); on the second call a
      *               caller-allocated buffer of at least the size returned by the

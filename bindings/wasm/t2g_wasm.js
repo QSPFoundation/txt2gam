@@ -42,9 +42,12 @@
     function consumeStr(ptr, lenPtr) {
         if (!ptr) return null;
         var len = Module.HEAP32[lenPtr >> 2];
-        var bytes = Module.HEAPU8.slice(ptr, ptr + len * 2);
+        /* Decode straight from a heap view (no intermediate copy); the decode is
+           synchronous and nothing grows the heap before we free below. */
+        var view = Module.HEAPU8.subarray(ptr, ptr + len * 2);
+        var result = new TextDecoder('utf-16le').decode(view);
         Module._free(ptr);
-        return new TextDecoder('utf-16le').decode(bytes);
+        return result;
     }
 
     Module['Txt2gam'] = /** @class */ (function () {
@@ -62,16 +65,17 @@
         };
 
         /**
-         * Parse raw text bytes into a JS string. Encoding is auto-detected from
-         * BOM (UTF-16 LE FF FE, UTF-8 EF BB BF) or the isUnicode fallback.
+         * Parse raw text data (with optional BOM) to a JS string.
          *
-         * @param {Uint8Array} textBytes
-         * @param {boolean} isUnicode  True = UTF-8 fallback, false = ANSI fallback.
+         * @param {Uint8Array} data
+         * @param {boolean} isUnicode  Encoding hint when no BOM is present.
          * @returns {string|null}
          */
-        Txt2gam.prototype.parseText = function (textBytes, isUnicode) {
-            var dataPtr = allocBytes(textBytes);
-            var resultPtr = Module._t2gWasmParseTextData(dataPtr, textBytes.length, isUnicode ? 1 : 0, this.lenPtr);
+        Txt2gam.prototype.parseText = function (data, isUnicode) {
+            var dataPtr   = allocBytes(data);
+            var resultPtr = Module._t2gWasmParseTextData(
+                dataPtr, data.length, isUnicode ? 1 : 0, this.lenPtr
+            );
             Module._free(dataPtr);
             return consumeStr(resultPtr, this.lenPtr);
         };

@@ -51,7 +51,7 @@ static QSP_BOOL qspSaveTextFile(char *file, QSP_CHAR *data, QSP_BOOL isUnicode)
         return QSP_FALSE;
     if (isUnicode)
     {
-        char *content = qspQSPStringToUTF8(data);
+        char *content = qspQSPStringToUTF8(data, -1);
         if (!content)
         {
             fclose(f);
@@ -63,7 +63,7 @@ static QSP_BOOL qspSaveTextFile(char *file, QSP_CHAR *data, QSP_BOOL isUnicode)
     }
     else
     {
-        char *content = qspQSPToGameString(data, QSP_FALSE, QSP_FALSE);
+        char *content = qspQSPToGameString(data, -1, QSP_FALSE, QSP_FALSE);
         fwrite(content, 1, strlen(content), f);
         free(content);
     }
@@ -136,7 +136,7 @@ static QSP_BOOL qspDecodeGameToText(char *inFile, char *outFile, QSP_BOOL isUnic
     fread(binData, 1, (size_t)fileSize, f);
     fclose(f);
     /* Call 1: get required text buffer size */
-    textSize = t2gGameToText(binData, (int)fileSize, passwd, locStart, locEnd, 0, 0);
+    textSize = t2gGameToText(binData, fileSize, passwd, locStart, locEnd, 0, 0);
     if (textSize < 0)
     {
         free(binData);
@@ -149,7 +149,7 @@ static QSP_BOOL qspDecodeGameToText(char *inFile, char *outFile, QSP_BOOL isUnic
         return QSP_FALSE;
     }
     /* Call 2: fill buffer */
-    t2gGameToText(binData, (int)fileSize, passwd, locStart, locEnd, textBuf, textSize);
+    t2gGameToText(binData, fileSize, passwd, locStart, locEnd, textBuf, textSize);
     free(binData);
     {
         QSP_BOOL res = qspSaveTextFile(outFile, textBuf, isUnicode);
@@ -224,7 +224,7 @@ int main(int argc, char **argv)
                 {
                 case 's': case 'S':
                     free(locStart);
-                    locStart = qspUTF8ToQSPString(argv[i] + 1);
+                    locStart = qspUTF8ToQSPString(argv[i] + 1, -1);
                     if (!locStart)
                     {
                         qspPrint("Loc start symbol is invalid\n");
@@ -233,7 +233,7 @@ int main(int argc, char **argv)
                     break;
                 case 'e': case 'E':
                     free(locEnd);
-                    locEnd = qspUTF8ToQSPString(argv[i] + 1);
+                    locEnd = qspUTF8ToQSPString(argv[i] + 1, -1);
                     if (!locEnd)
                     {
                         qspPrint("Loc end symbol is invalid\n");
@@ -242,7 +242,7 @@ int main(int argc, char **argv)
                     break;
                 case 'p': case 'P':
                     free(passwd);
-                    passwd = qspUTF8ToQSPString(argv[i] + 1);
+                    passwd = qspUTF8ToQSPString(argv[i] + 1, -1);
                     if (!passwd)
                     {
                         qspPrint("Password is invalid\n");
