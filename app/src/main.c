@@ -15,6 +15,7 @@
 enum Mode
 {
     QSP_ERROR,
+    QSP_SHOW_HELP,
     QSP_ENCODE_INTO_GAME,
     QSP_DECODE_INTO_TEXT,
     QSP_EXTRACT_STRINGS,
@@ -158,34 +159,31 @@ static QSP_BOOL qspDecodeGameToText(char *inFile, char *outFile, QSP_BOOL isUnic
     }
 }
 
-void ShowHelp()
+static void qspShowHelp(void)
 {
     qspPrint("TXT2GAM utility, ver. %s\n", QSP_VER);
     qspPrint("Usage:\n");
-    qspPrint("  txt2gam [input file] [output file] [options]\n");
+    qspPrint("  txt2gam [options] <input> <output>\n");
     qspPrint("Options:\n");
-    qspPrint("  a, A - ANSI mode, default is Unicode (UTF-8, UTF-16) mode\n");
-    qspPrint("  o, O - Save game in old format, default is new format\n");
-    qspPrint("  s[string], S[string] - 'Start of loc' prefix, default is '%s'\n", T2G_STARTLOC);
-    qspPrint("  e[string], E[string] - 'End of loc' prefix, default is '%s'\n", T2G_ENDLOC);
-    qspPrint("  p[pass], P[pass] - Password, default is '%s'\n", T2G_PASSWD);
-    qspPrint("  c, C - Encode text file into game file (default mode)\n");
-    qspPrint("  d, D - Decode game file into text file\n");
-    qspPrint("  t, T - Extract strings from text\n");
-    qspPrint("  q, Q - Extract q-strings from text\n");
+    qspPrint("  -h          Show this help\n");
+    qspPrint("  -c          Encode text file into game file (default)\n");
+    qspPrint("  -d          Decode game file into text file\n");
+    qspPrint("  -t          Extract strings from text file\n");
+    qspPrint("  -q          Extract q-strings from text file\n");
+    qspPrint("  -o          Save game in old format (default: new format)\n");
+    qspPrint("  -a          ANSI mode (default: Unicode / UTF-8 / UTF-16)\n");
+    qspPrint("  -s <value>  'Start of loc' prefix (default: '%s')\n", T2G_STARTLOC);
+    qspPrint("  -e <value>  'End of loc' prefix (default: '%s')\n", T2G_ENDLOC);
+    qspPrint("  -p <value>  Password (default: '%s')\n", T2G_PASSWD);
     qspPrint("Examples:\n");
-    qspPrint("  txt2gam file.txt gamefile.qsp pMyPassword\n");
     qspPrint("  txt2gam file.txt gamefile.qsp\n");
-    qspPrint("  txt2gam file.txt gamefile.qsp a\n");
-    qspPrint("  txt2gam gamefile.qsp file.txt d pMyPassword\n");
-    qspPrint("  txt2gam file.txt gamefile.qsp o pMyPassword\n");
-    qspPrint("  txt2gam file.txt gamefile.qsp o e@ pMyPassword\n");
-    qspPrint("  txt2gam file.txt gamefile.qsp o \"pMy Password\"\n");
-    qspPrint("  txt2gam file.txt gamefile.qsp a o \"pMy Password\"\n");
-    qspPrint("  txt2gam file.txt gamefile.qsp o\n");
-    qspPrint("  txt2gam file.txt gamefile.qsp o e@\n");
-    qspPrint("  txt2gam file.txt gamefile.qsp s@ e~\n");
-    qspPrint("  txt2gam file.txt strsfile.txt t a\n");
+    qspPrint("  txt2gam -a file.txt gamefile.qsp\n");
+    qspPrint("  txt2gam -o -p MyPassword file.txt gamefile.qsp\n");
+    qspPrint("  txt2gam -d -p MyPassword gamefile.qsp file.txt\n");
+    qspPrint("  txt2gam -o -e @ file.txt gamefile.qsp\n");
+    qspPrint("  txt2gam -s @ -e ~ file.txt gamefile.qsp\n");
+    qspPrint("  txt2gam -p \"My Password\" file.txt gamefile.qsp\n");
+    qspPrint("  txt2gam -t -a file.txt strsfile.txt\n");
 }
 
 int main(int argc, char **argv)
@@ -193,80 +191,103 @@ int main(int argc, char **argv)
     int i, workMode;
     QSP_BOOL isOldFormat, isUnicode, isErr;
     QSP_CHAR *passwd, *locStart, *locEnd;
+    char *inFile, *outFile;
     setlocale(LC_ALL, QSP_LOCALE);
-    if (argc < 3)
-    {
-        ShowHelp();
-        return 0;
-    }
     workMode = QSP_ENCODE_INTO_GAME;
     isOldFormat = QSP_FALSE;
     isUnicode = QSP_TRUE;
+    inFile = 0;
+    outFile = 0;
     qspAddText(&locStart, T2G_STARTLOC, 0, -1, QSP_TRUE);
     qspAddText(&locEnd, T2G_ENDLOC, 0, -1, QSP_TRUE);
     qspAddText(&passwd, T2G_PASSWD, 0, -1, QSP_TRUE);
-    for (i = 3; i < argc; ++i)
+    for (i = 1; i < argc; ++i)
     {
-        switch (*argv[i])
+        if (argv[i][0] == '-' && argv[i][1])
         {
-        case 'o': case 'O':
-            isOldFormat = QSP_TRUE;
-            break;
-        case 'a': case 'A':
-            isUnicode = QSP_FALSE;
-            break;
-        case 's': case 'S':
-        case 'e': case 'E':
-        case 'p': case 'P':
-            if (argv[i][1])
+            char opt = argv[i][1];
+            /* Value may be attached (-pFoo) or separate (-p Foo) */
+            char *val = argv[i][2] ? argv[i] + 2 : 0;
+            switch (opt)
             {
-                switch (*argv[i])
+            case 'h': case 'H':
+                workMode = QSP_SHOW_HELP;
+                break;
+            case 'o': case 'O':
+                isOldFormat = QSP_TRUE;
+                break;
+            case 'a': case 'A':
+                isUnicode = QSP_FALSE;
+                break;
+            case 'c': case 'C':
+                workMode = QSP_ENCODE_INTO_GAME;
+                break;
+            case 'd': case 'D':
+                workMode = QSP_DECODE_INTO_TEXT;
+                break;
+            case 't': case 'T':
+                workMode = QSP_EXTRACT_STRINGS;
+                break;
+            case 'q': case 'Q':
+                workMode = QSP_EXTRACT_QSTRINGS;
+                break;
+            case 's': case 'S':
+            case 'e': case 'E':
+            case 'p': case 'P':
+                if (!val)
+                {
+                    if (i + 1 >= argc)
+                    {
+                        qspPrint("Option -%c requires an argument\n", opt);
+                        workMode = QSP_ERROR;
+                        break;
+                    }
+                    val = argv[++i];
+                }
+                switch (opt)
                 {
                 case 's': case 'S':
                     free(locStart);
-                    locStart = qspUTF8ToQSPString(argv[i] + 1, -1);
-                    if (!locStart)
-                    {
-                        qspPrint("Loc start symbol is invalid\n");
-                        workMode = QSP_ERROR;
-                    }
+                    locStart = qspUTF8ToQSPString(val, -1);
+                    if (!locStart) { qspPrint("Loc start value is invalid\n"); workMode = QSP_ERROR; }
                     break;
                 case 'e': case 'E':
                     free(locEnd);
-                    locEnd = qspUTF8ToQSPString(argv[i] + 1, -1);
-                    if (!locEnd)
-                    {
-                        qspPrint("Loc end symbol is invalid\n");
-                        workMode = QSP_ERROR;
-                    }
+                    locEnd = qspUTF8ToQSPString(val, -1);
+                    if (!locEnd) { qspPrint("Loc end value is invalid\n"); workMode = QSP_ERROR; }
                     break;
                 case 'p': case 'P':
                     free(passwd);
-                    passwd = qspUTF8ToQSPString(argv[i] + 1, -1);
-                    if (!passwd)
-                    {
-                        qspPrint("Password is invalid\n");
-                        workMode = QSP_ERROR;
-                    }
+                    passwd = qspUTF8ToQSPString(val, -1);
+                    if (!passwd) { qspPrint("Password is invalid\n"); workMode = QSP_ERROR; }
                     break;
                 }
+                break;
+            default:
+                qspPrint("Unknown option: -%c\n", opt);
+                workMode = QSP_ERROR;
+                break;
             }
-            break;
-        case 'c': case 'C':
-            workMode = QSP_ENCODE_INTO_GAME;
-            break;
-        case 'd': case 'D':
-            workMode = QSP_DECODE_INTO_TEXT;
-            break;
-        case 't': case 'T':
-            workMode = QSP_EXTRACT_STRINGS;
-            break;
-        case 'q': case 'Q':
-            workMode = QSP_EXTRACT_QSTRINGS;
-            break;
+        }
+        else if (!inFile)
+            inFile = argv[i];
+        else if (!outFile)
+            outFile = argv[i];
+        else
+        {
+            qspPrint("Unexpected argument: %s\n", argv[i]);
+            workMode = QSP_ERROR;
         }
         if (workMode == QSP_ERROR)
             break;
+    }
+    if (workMode != QSP_ERROR && (workMode == QSP_SHOW_HELP || !inFile || !outFile))
+    {
+        qspShowHelp();
+        free(locStart);
+        free(locEnd);
+        free(passwd);
+        return 0;
     }
     if (workMode == QSP_ERROR)
     {
@@ -285,15 +306,15 @@ int main(int argc, char **argv)
     {
         case QSP_EXTRACT_STRINGS:
         case QSP_EXTRACT_QSTRINGS:
-            if (isErr = !qspExportStrings(argv[1], argv[2], locStart, locEnd, workMode == QSP_EXTRACT_QSTRINGS, isUnicode))
+            if (isErr = !qspExportStrings(inFile, outFile, locStart, locEnd, workMode == QSP_EXTRACT_QSTRINGS, isUnicode))
                 qspPrint("String extraction has failed!\n");
             break;
         case QSP_ENCODE_INTO_GAME:
-            if (isErr = !qspEncodeTextToGame(argv[1], argv[2], isUnicode, locStart, locEnd, isOldFormat, passwd))
+            if (isErr = !qspEncodeTextToGame(inFile, outFile, isUnicode, locStart, locEnd, isOldFormat, passwd))
                 qspPrint("Encoding text to game has failed!\n");
             break;
         case QSP_DECODE_INTO_TEXT:
-            if (isErr = !qspDecodeGameToText(argv[1], argv[2], isUnicode, locStart, locEnd, passwd))
+            if (isErr = !qspDecodeGameToText(inFile, outFile, isUnicode, locStart, locEnd, passwd))
                 qspPrint("Decoding game to text has failed!\n");
             break;
     }
