@@ -157,14 +157,15 @@ QSP_CHAR *qspGameToQSPString(char *s, int len, QSP_BOOL isUnicode, QSP_BOOL isCo
     return ret;
 }
 
-int qspSplitGameData(char *data, int dataLen, QSP_BOOL isUnicode, char ***res)
+int qspSplitGameData(char *data, int dataLen, QSP_BOOL isUnicode, QSPGameSeg **res)
 {
-    char *delimStr, **ret, *segStart = data, *dataEnd = data + dataLen, *pos;
+    QSPGameSeg *ret;
+    char *delimStr, *pos, *segStart = data, *dataEnd = data + dataLen;
     int charSize = (isUnicode ? 2 : 1);
     int delimSize, segSize, count = 0, bufSize = 8;
     delimStr = qspQSPToGameString(QSP_STRSDELIM, -1, isUnicode, QSP_FALSE);
     delimSize = QSP_LEN(QSP_STRSDELIM) * charSize;
-    ret = (char **)malloc(bufSize * sizeof(char *));
+    ret = (QSPGameSeg *)malloc(bufSize * sizeof(QSPGameSeg));
     do
     {
         for (pos = segStart; pos + delimSize <= dataEnd; pos += charSize)
@@ -174,11 +175,10 @@ int qspSplitGameData(char *data, int dataLen, QSP_BOOL isUnicode, char ***res)
         if (count >= bufSize)
         {
             bufSize += 16;
-            ret = (char **)realloc(ret, bufSize * sizeof(char *));
+            ret = (QSPGameSeg *)realloc(ret, bufSize * sizeof(QSPGameSeg));
         }
-        ret[count] = (char *)malloc(segSize + charSize);
-        memcpy(ret[count], segStart, segSize);
-        memset(ret[count] + segSize, 0, charSize);
+        ret[count].Str = segStart;
+        ret[count].Len = segSize / charSize;
         ++count;
         segStart = pos + delimSize;
     } while (pos != dataEnd);

@@ -14,7 +14,7 @@
 QSPLocation *qspLocs = 0;
 int qspLocsCount = 0;
 
-static QSP_BOOL qspCheckQuest(char **strs, int count, QSP_BOOL isUnicode, QSP_CHAR *password);
+static QSP_BOOL qspCheckQuest(QSPGameSeg *strs, int count, QSP_BOOL isUnicode, QSP_CHAR *password);
 static void qspInitLocation(QSPLocation *loc);
 
 static void qspInitLocation(QSPLocation *loc)
@@ -22,23 +22,28 @@ static void qspInitLocation(QSPLocation *loc)
     memset(loc, 0, sizeof(QSPLocation));
 }
 
-static QSP_BOOL qspCheckQuest(char **strs, int count, QSP_BOOL isUnicode, QSP_CHAR *password)
+static QSP_CHAR *qspSegToStr(QSPGameSeg seg, QSP_BOOL isUnicode, QSP_BOOL isCoded)
+{
+    return qspGameToQSPString(seg.Str, seg.Len, isUnicode, isCoded);
+}
+
+static QSP_BOOL qspCheckQuest(QSPGameSeg *strs, int count, QSP_BOOL isUnicode, QSP_CHAR *password)
 {
     int i, ind, locsCount, actsCount;
     QSP_BOOL isOldFormat, hasInvalidPassword;
-    QSP_CHAR *buf = qspGameToQSPString(strs[0], -1, isUnicode, QSP_FALSE);
+    QSP_CHAR *buf = qspSegToStr(strs[0], isUnicode, QSP_FALSE);
     isOldFormat = qspStrsComp(buf, QSP_GAMEID) != 0;
     free(buf);
     ind = (isOldFormat ? 30 : 4);
     if (ind > count) return QSP_FALSE;
-    buf = (isOldFormat ? qspGameToQSPString(strs[1], -1, isUnicode, QSP_TRUE) : qspGameToQSPString(strs[2], -1, isUnicode, QSP_TRUE));
+    buf = (isOldFormat ? qspSegToStr(strs[1], isUnicode, QSP_TRUE) : qspSegToStr(strs[2], isUnicode, QSP_TRUE));
     hasInvalidPassword = qspStrsComp(buf, password);
     free(buf);
 #ifdef SPEC_PASS
     hasInvalidPassword = hasInvalidPassword && qspStrsComp(QSP_FMT(SPEC_PASS), password);
 #endif
     if (hasInvalidPassword) return QSP_FALSE;
-    buf = (isOldFormat ? qspGameToQSPString(strs[0], -1, isUnicode, QSP_FALSE) : qspGameToQSPString(strs[3], -1, isUnicode, QSP_TRUE));
+    buf = (isOldFormat ? qspSegToStr(strs[0], isUnicode, QSP_FALSE) : qspSegToStr(strs[3], isUnicode, QSP_TRUE));
     locsCount = qspStrToNum(buf, 0);
     free(buf);
     if (locsCount <= 0) return QSP_FALSE;
@@ -50,7 +55,7 @@ static QSP_BOOL qspCheckQuest(char **strs, int count, QSP_BOOL isUnicode, QSP_CH
         else
         {
             if (ind + 1 > count) return QSP_FALSE;
-            buf = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
+            buf = qspSegToStr(strs[ind++], isUnicode, QSP_TRUE);
             actsCount = qspStrToNum(buf, 0);
             free(buf);
             if (actsCount < 0 || actsCount > QSP_MAXACTIONS) return QSP_FALSE;
@@ -201,18 +206,14 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
     return res;
 }
 
-int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toFill)
+int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd)
 {
     QSP_CHAR *locCode, *pos, quot = 0;
     int locStartLen, locEndLen, locBufSize = 1024, locCodeLen = 0, quotsCount = 0, curLoc = 0, locCapacity = qspLocsCount;
     QSP_BOOL isNewLine = QSP_TRUE, isInLoc = QSP_FALSE, isInBaseSection = QSP_FALSE, isInBaseAction = QSP_FALSE;
     locStartLen = qspStrLen(locStart);
     locEndLen = qspStrLen(locEnd);
-    if (toFill)
-    {
-        /* Allocate buffer for code */
-        locCode = qspAllocateBuffer(locBufSize);
-    }
+    locCode = qspAllocateBuffer(locBufSize);
     while (*data)
     {
         if (isInLoc)
@@ -225,7 +226,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                     data += locEndLen;
                     toSkipLine = QSP_TRUE; /* we're searching for a new loc now */
 
-                    if (toFill && locCodeLen > QSP_LEN(QSP_STRSDELIM)) /* we have to remove the last line separator */
+                    if (locCodeLen > QSP_LEN(QSP_STRSDELIM)) /* we have to remove the last line separator */
                     {
                         if (!isInBaseSection)
                         {
@@ -250,7 +251,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                             data += QSP_LEN(QSP_BASEACTS_ACT_FOOTER);
                             toSkipLine = QSP_TRUE;
                             /* Update action code */
-                            if (toFill && locCodeLen > QSP_LEN(QSP_STRSDELIM)) /* we have to remove the last line separator */
+                            if (locCodeLen > QSP_LEN(QSP_STRSDELIM)) /* we have to remove the last line separator */
                             {
                                 locCode[locCodeLen - QSP_LEN(QSP_STRSDELIM)] = 0;
                                 qspUpdateActionCode(locCode, qspLocs + curLoc);
@@ -272,10 +273,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                         data += QSP_LEN(QSP_BASEACTS_ACT_HEADER);
                         toSkipLine = QSP_TRUE;
                         /* Parse & add an action */
-                        if (toFill)
-                            qspParseBaseAction(&data, qspLocs + curLoc);
-                        else
-                            qspParseBaseAction(&data, 0);
+                        qspParseBaseAction(&data, qspLocs + curLoc);
 
                         locCodeLen = 0; /* reuse the code buffer */
                         isInBaseAction = QSP_TRUE;
@@ -284,30 +282,21 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                     {
                         toSkipLine = QSP_TRUE;
                         /* Parse & add base description */
-                        if (toFill)
-                            qspParseBaseDescriptionPrintLine(&data, qspLocs + curLoc);
-                        else
-                            qspParseBaseDescriptionPrintLine(&data, 0);
+                        qspParseBaseDescriptionPrintLine(&data, qspLocs + curLoc);
                     }
                     else if (qspIsEqual(data, QSP_BASEDESC_PRINTLINE, QSP_LEN(QSP_BASEDESC_PRINTLINE)))
                     {
                         data += QSP_LEN(QSP_BASEDESC_PRINTLINE);
                         toSkipLine = QSP_TRUE;
                         /* Parse & add base description */
-                        if (toFill)
-                            qspParseBaseDescriptionPrintLine(&data, qspLocs + curLoc);
-                        else
-                            qspParseBaseDescriptionPrintLine(&data, 0);
+                        qspParseBaseDescriptionPrintLine(&data, qspLocs + curLoc);
                     }
                     else if (qspIsEqual(data, QSP_BASEDESC_PRINT, QSP_LEN(QSP_BASEDESC_PRINT)))
                     {
                         data += QSP_LEN(QSP_BASEDESC_PRINT);
                         toSkipLine = QSP_TRUE;
                         /* Parse & add base description */
-                        if (toFill)
-                            qspParseBaseDescriptionPrint(&data, qspLocs + curLoc);
-                        else
-                            qspParseBaseDescriptionPrint(&data, 0);
+                        qspParseBaseDescriptionPrint(&data, qspLocs + curLoc);
                     }
                 }
                 else if (qspIsEqual(data, QSP_BASESECTION_HEADER, QSP_LEN(QSP_BASESECTION_HEADER)))
@@ -331,17 +320,14 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                         break;
                 }
             }
-            /* Always update the locCode */
             if (*data == QSP_NEWLINE)
             {
-                if (toFill)
-                    locCodeLen = qspAddTextToBuffer(&locCode, QSP_STRSDELIM, QSP_LEN(QSP_STRSDELIM), locCodeLen, &locBufSize);
+                locCodeLen = qspAddTextToBuffer(&locCode, QSP_STRSDELIM, QSP_LEN(QSP_STRSDELIM), locCodeLen, &locBufSize);
                 isNewLine = QSP_TRUE;
             }
             else
             {
-                if (toFill)
-                    locCodeLen = qspAddCharToBuffer(&locCode, *data, locCodeLen, &locBufSize);
+                locCodeLen = qspAddCharToBuffer(&locCode, *data, locCodeLen, &locBufSize);
                 isNewLine = QSP_FALSE;
             }
             if (quot)
@@ -350,8 +336,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
                 {
                     if (*(data + 1) == quot)
                     {
-                        if (toFill)
-                            locCodeLen = qspAddCharToBuffer(&locCode, *data, locCodeLen, &locBufSize);
+                        locCodeLen = qspAddCharToBuffer(&locCode, *data, locCodeLen, &locBufSize);
                         ++data;
                     }
                     else
@@ -377,27 +362,24 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
             pos = qspStrChr(data, QSP_NEWLINE);
             if (qspIsEqual(data, locStart, locStartLen))
             {
-                if (toFill)
+                if (curLoc >= locCapacity)
                 {
-                    if (curLoc >= locCapacity)
-                    {
-                        locCapacity += 32;
-                        qspLocs = (QSPLocation *)realloc(qspLocs, locCapacity * sizeof(QSPLocation));
-                    }
-                    qspInitLocation(qspLocs + curLoc);
-                    qspLocsCount = curLoc + 1;
-                    data += locStartLen;
-                    if (pos)
-                    {
-                        *pos = 0;
-                        qspLocs[curLoc].Name = qspDelSpc(data);
-                        *pos = QSP_NEWLINE;
-                    }
-                    else
-                        qspLocs[curLoc].Name = qspDelSpc(data);
-
-                    qspPrint("Location: %s\n", qspLocs[curLoc].Name);
+                    locCapacity += 32;
+                    qspLocs = (QSPLocation *)realloc(qspLocs, locCapacity * sizeof(QSPLocation));
                 }
+                qspInitLocation(qspLocs + curLoc);
+                qspLocsCount = curLoc + 1;
+                data += locStartLen;
+                if (pos)
+                {
+                    *pos = 0;
+                    qspLocs[curLoc].Name = qspDelSpc(data);
+                    *pos = QSP_NEWLINE;
+                }
+                else
+                    qspLocs[curLoc].Name = qspDelSpc(data);
+
+                qspPrint("Location: %s\n", qspLocs[curLoc].Name);
                 locCodeLen = 0; /* reuse the code buffer */
                 isInLoc = QSP_TRUE;
                 isInBaseSection = QSP_FALSE;
@@ -413,7 +395,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
     if (isInLoc)
     {
         /* The last location */
-        if (toFill && locCodeLen)
+        if (locCodeLen)
         {
             locCode[locCodeLen] = 0;
             if (isInBaseAction)
@@ -424,13 +406,10 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BO
         ++curLoc;
     }
 
-    if (toFill)
-    {
-        free(locCode);
-        if (locCapacity > qspLocsCount)
-            qspLocs = (QSPLocation *)realloc(qspLocs, qspLocsCount * sizeof(QSPLocation));
-        qspPrint("%d locations were loaded\n", curLoc);
-    }
+    free(locCode);
+    if (locCapacity > qspLocsCount)
+        qspLocs = (QSPLocation *)realloc(qspLocs, qspLocsCount * sizeof(QSPLocation));
+    qspPrint("%d locations were loaded\n", curLoc);
 
     return curLoc;
 }
@@ -521,28 +500,28 @@ QSP_BOOL qspOpenQuest(char *data, int dataSize, QSP_CHAR *password)
     QSP_BOOL isOldFormat, isUnicode;
     int i, j, ind, count, locsCount, actsCount;
     QSP_CHAR *buf;
-    char **strs;
+    QSPGameSeg *strs;
     /* Parse the data */
     if (dataSize < 2) return QSP_FALSE;
     count = qspSplitGameData(data, dataSize, isUnicode = !data[1], &strs);
     if (!qspCheckQuest(strs, count, isUnicode, password))
     {
-        qspFreeStrs((void **)strs, count);
+        free(strs);
         return QSP_FALSE;
     }
-    buf = qspGameToQSPString(strs[0], -1, isUnicode, QSP_FALSE);
+    buf = qspSegToStr(strs[0], isUnicode, QSP_FALSE);
     isOldFormat = qspStrsComp(buf, QSP_GAMEID) != 0;
     free(buf);
-    buf = (isOldFormat ? qspGameToQSPString(strs[0], -1, isUnicode, QSP_FALSE) : qspGameToQSPString(strs[3], -1, isUnicode, QSP_TRUE));
+    buf = (isOldFormat ? qspSegToStr(strs[0], isUnicode, QSP_FALSE) : qspSegToStr(strs[3], isUnicode, QSP_TRUE));
     locsCount = qspStrToNum(buf, 0);
     free(buf);
     qspCreateWorld(locsCount);
     ind = (isOldFormat ? 30 : 4);
     for (i = 0; i < locsCount; ++i)
     {
-        qspLocs[i].Name = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
-        qspLocs[i].Desc = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
-        qspLocs[i].OnVisit = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
+        qspLocs[i].Name = qspSegToStr(strs[ind++], isUnicode, QSP_TRUE);
+        qspLocs[i].Desc = qspSegToStr(strs[ind++], isUnicode, QSP_TRUE);
+        qspLocs[i].OnVisit = qspSegToStr(strs[ind++], isUnicode, QSP_TRUE);
 
         qspPrint("Location: %s\n", qspLocs[i].Name);
 
@@ -550,22 +529,22 @@ QSP_BOOL qspOpenQuest(char *data, int dataSize, QSP_CHAR *password)
             actsCount = 20;
         else
         {
-            buf = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
+            buf = qspSegToStr(strs[ind++], isUnicode, QSP_TRUE);
             actsCount = qspStrToNum(buf, 0);
             free(buf);
         }
         qspLocs[i].ActionsCount = actsCount;
         for (j = 0; j < actsCount; ++j)
         {
-            qspLocs[i].Actions[j].Image = (isOldFormat ? 0 : qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE));
-            qspLocs[i].Actions[j].Desc = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
-            qspLocs[i].Actions[j].Code = qspGameToQSPString(strs[ind++], -1, isUnicode, QSP_TRUE);
+            qspLocs[i].Actions[j].Image = (isOldFormat ? 0 : qspSegToStr(strs[ind++], isUnicode, QSP_TRUE));
+            qspLocs[i].Actions[j].Desc = qspSegToStr(strs[ind++], isUnicode, QSP_TRUE);
+            qspLocs[i].Actions[j].Code = qspSegToStr(strs[ind++], isUnicode, QSP_TRUE);
         }
     }
 
     qspPrint("%d locations were loaded\n", locsCount);
 
-    qspFreeStrs((void **)strs, count);
+    free(strs);
     return QSP_TRUE;
 }
 

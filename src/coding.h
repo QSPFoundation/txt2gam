@@ -14,12 +14,18 @@
 
     extern char16_t qspCP1251ToUTF16LETable[];
 
+    typedef struct
+    {
+        char *Str;
+        int Len;
+    } QSPGameSeg;
+
     /* External functions */
     char16_t qspDirectConvertUC(char, char16_t *);
     char qspReverseConvertUC(char16_t, char16_t *);
     char *qspQSPToGameString(QSP_CHAR *, int, QSP_BOOL, QSP_BOOL);
     QSP_CHAR *qspGameToQSPString(char *, int, QSP_BOOL, QSP_BOOL);
-    int qspSplitGameData(char *, int, QSP_BOOL, char ***);
+    int qspSplitGameData(char *, int, QSP_BOOL, QSPGameSeg **);
     int qspGameCodeWriteVal(char **, int, QSP_CHAR *, QSP_BOOL, QSP_BOOL);
     int qspGameCodeWriteIntValLine(char **, int, int, QSP_BOOL, QSP_BOOL);
     int qspGameCodeWriteValLine(char **, int, QSP_CHAR *, QSP_BOOL, QSP_BOOL);

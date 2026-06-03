@@ -14,6 +14,7 @@
     #define QSP_SPACES QSP_FMT(" \t")
     #define QSP_QUOTS QSP_FMT("'\"")
     #define QSP_NEWLINE QSP_FMT('\n')
+    #define QSP_OLDNEWLINE QSP_FMT('\r')
     #define QSP_LQUOT QSP_FMT('{')
     #define QSP_RQUOT QSP_FMT('}')
     #define QSP_COLON QSP_FMT(':')

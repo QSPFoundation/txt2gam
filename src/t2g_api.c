@@ -79,13 +79,22 @@ char *t2gEncodeTextToGame(const QSP_CHAR *text, const QSP_CHAR *locStart, const 
     int len;
     char *gameData;
     QSP_CHAR *qspLocStart, *qspLocEnd, *qspPassword;
+    QSP_CHAR *textData, *textNorm = 0;
     if (!text || !outLen) return 0;
+    textData = (QSP_CHAR *)text;
+    if (qspStrChr(textData, QSP_OLDNEWLINE))
+    {
+        textNorm = qspNewStr(textData);
+        qspFormatLineEndings(textNorm);
+        textData = textNorm;
+    }
     qspLocStart = locStart ? qspNewStr((QSP_CHAR *)locStart) : qspNewStr(T2G_STARTLOC);
     qspLocEnd   = locEnd   ? qspNewStr((QSP_CHAR *)locEnd)   : qspNewStr(T2G_ENDLOC);
     qspPassword = password ? qspNewStr((QSP_CHAR *)password) : qspNewStr(QSP_PASSWD);
     qspCreateWorld(0);
-    qspOpenTextData((QSP_CHAR *)text, qspLocStart, qspLocEnd, QSP_TRUE);
+    qspOpenTextData(textData, qspLocStart, qspLocEnd);
     gameData = qspSaveQuest(isOldFormat, isUnicode, qspPassword, &len);
+    if (textNorm) free(textNorm);
     free(qspLocStart);
     free(qspLocEnd);
     free(qspPassword);
@@ -123,15 +132,19 @@ QSP_CHAR *t2gDecodeGameToText(const char *data, int dataLen, const QSP_CHAR *pas
 QSP_CHAR *t2gExtractStrings(const QSP_CHAR *text, const QSP_CHAR *locStart,
                            const QSP_CHAR *locEnd, QSP_BOOL toGetQStrings, int *outLen)
 {
-    QSP_CHAR *textData, *qspLocStart, *qspLocEnd, *result;
+    QSP_CHAR *textData, *qspLocStart, *qspLocEnd, *result, *textNorm = 0;
     if (!text || !outLen) return 0;
-    textData = qspNewStr((QSP_CHAR *)text);
-    if (!textData) return 0;
-    qspFormatLineEndings(textData);
+    textData = (QSP_CHAR *)text;
+    if (qspStrChr(textData, QSP_OLDNEWLINE))
+    {
+        textNorm = qspNewStr(textData);
+        qspFormatLineEndings(textNorm);
+        textData = textNorm;
+    }
     qspLocStart = locStart ? qspNewStr((QSP_CHAR *)locStart) : qspNewStr(T2G_STARTLOC);
     qspLocEnd   = locEnd   ? qspNewStr((QSP_CHAR *)locEnd)   : qspNewStr(T2G_ENDLOC);
     result = qspGetLocsStrings(textData, qspLocStart, qspLocEnd, toGetQStrings);
-    free(textData);
+    if (textNorm) free(textNorm);
     free(qspLocStart);
     free(qspLocEnd);
     /* qspGetLocsStrings returns 0 when no strings are found; expose that as an
