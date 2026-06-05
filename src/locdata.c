@@ -58,13 +58,13 @@ QSP_BOOL qspParseBaseDescriptionPrint(QSP_CHAR **code, QSPLocation *loc)
     desc = qspReadString(&ptr);
     if (!desc)
     {
-        qspPrint("Warning: can't get base description\n");
+        t2gPrint("Warning: can't get base description\n");
         *code = ptr;
         return QSP_FALSE;
     }
     if (loc)
     {
-        qspPrint("\tAdding base description\n");
+        t2gPrint("\tAdding base description\n");
         qspAddText(&loc->Desc, desc, -1, -1, QSP_FALSE);
     }
     free(desc);
@@ -78,7 +78,7 @@ QSP_BOOL qspParseBaseDescriptionPrintLine(QSP_CHAR **code, QSPLocation *loc)
     desc = qspReadString(&ptr);
     if (loc)
     {
-        qspPrint("\tAdding base description\n");
+        t2gPrint("\tAdding base description\n");
         if (desc) /* optional parameter */
             qspAddText(&loc->Desc, desc, -1, -1, QSP_FALSE);
         qspAddText(&loc->Desc, QSP_STRSDELIM, -1, QSP_LEN(QSP_STRSDELIM), QSP_FALSE);
@@ -94,7 +94,7 @@ QSP_BOOL qspParseBaseAction(QSP_CHAR **code, QSPLocation *loc)
     actName = qspReadString(&ptr);
     if (!actName)
     {
-        qspPrint("Warning: can't get the action name\n");
+        t2gPrint("Warning: can't get the action name\n");
         *code = ptr;
         return QSP_FALSE;
     }
@@ -104,7 +104,7 @@ QSP_BOOL qspParseBaseAction(QSP_CHAR **code, QSPLocation *loc)
         actImage = qspReadString(&ptr);
         if (!actImage)
         {
-            qspPrint("Warning: can't get the image\n");
+            t2gPrint("Warning: can't get the image\n");
             free(actName);
             *code = ptr;
             return QSP_FALSE;
@@ -114,7 +114,7 @@ QSP_BOOL qspParseBaseAction(QSP_CHAR **code, QSPLocation *loc)
         actImage = 0;
     if (*ptr != QSP_COLON)
     {
-        qspPrint("Warning: base action is incorrect\n");
+        t2gPrint("Warning: base action is incorrect\n");
         free(actName);
         if (actImage) free(actImage);
         *code = ptr;
@@ -125,13 +125,13 @@ QSP_BOOL qspParseBaseAction(QSP_CHAR **code, QSPLocation *loc)
         int actionsCount = loc->ActionsCount;
         if (actionsCount >= QSP_MAXACTIONS)
         {
-            qspPrint("Warning: too many base actions\n");
+            t2gPrint("Warning: too many base actions\n");
             free(actName);
             if (actImage) free(actImage);
             *code = ptr;
             return QSP_FALSE;
         }
-        qspPrint("\tBase action: %s\n", actName);
+        t2gPrint("\tBase action: %s\n", actName);
         loc->Actions[actionsCount].Desc = actName;
         loc->Actions[actionsCount].Image = actImage;
         loc->Actions[actionsCount].Code = 0;
@@ -153,7 +153,7 @@ QSP_BOOL qspUpdateActionCode(QSP_CHAR *code, QSPLocation *loc)
     int i, bufSize, formattedCodeLen, linesCount, actionsCount = loc->ActionsCount;
     if (!actionsCount)
     {
-        qspPrint("Warning: no actions to update\n");
+        t2gPrint("Warning: no actions to update\n");
         return QSP_FALSE;
     }
     /* Trim QSP_BASEACTS_LINE_PREFIX */

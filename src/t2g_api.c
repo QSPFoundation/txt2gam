@@ -13,7 +13,7 @@
 #include "sys.h"
 #include <string.h>
 
-QSP_CHAR *t2gParseTextData(const char *data, int dataLen, QSP_BOOL isUnicode)
+QSP_CHAR *t2gParseTextData(const char *data, int dataLen, QSP_BOOL isUnicode, int *outLen)
 {
     int encoding, len;
     const char *src;
@@ -54,7 +54,39 @@ QSP_CHAR *t2gParseTextData(const char *data, int dataLen, QSP_BOOL isUnicode)
         result = qspGameToQSPString((char *)src, len, QSP_FALSE, QSP_FALSE);
         break;
     }
-    if (result) qspFormatLineEndings(result);
+    if (!result) return 0;
+    qspFormatLineEndings(result);
+    if (outLen) *outLen = (int)qspStrLen(result) + 1;
+    return result;
+}
+
+char *t2gEncodeTextData(const QSP_CHAR *text, QSP_BOOL isUnicode, int *outLen)
+{
+    char *encoded, *result;
+    int encodedLen, bomLen;
+    if (!text) return 0;
+    if (isUnicode)
+    {
+        encoded = qspQSPStringToUTF8((QSP_CHAR *)text, -1);
+        bomLen = sizeof(T2G_UTF8BOM) - 1;
+    }
+    else
+    {
+        encoded = qspQSPToGameString((QSP_CHAR *)text, -1, QSP_FALSE, QSP_FALSE);
+        bomLen = 0;
+    }
+    if (!encoded) return 0;
+    encodedLen = (int)strlen(encoded);
+    result = (char *)malloc(bomLen + encodedLen + 1);
+    if (!result)
+    {
+        free(encoded);
+        return 0;
+    }
+    if (bomLen) memcpy(result, T2G_UTF8BOM, bomLen);
+    memcpy(result + bomLen, encoded, encodedLen + 1);
+    free(encoded);
+    if (outLen) *outLen = bomLen + encodedLen;
     return result;
 }
 

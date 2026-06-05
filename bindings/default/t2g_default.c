@@ -6,9 +6,32 @@
  */
 
 #include "t2g_default.h"
-#include "t2g_api.h"
+#include "../src/t2g_api.h"
+#include "../src/coding.h"
 #include <stdlib.h>
 #include <string.h>
+
+int t2gReadTextData(const char *data, int dataLen, QSP_BOOL isUnicode, QSP_CHAR *outBuf, int outBufSize)
+{
+    int len = 0;
+    QSP_CHAR *result = t2gParseTextData(data, dataLen, isUnicode, &len);
+    if (!result) return -1;
+    if (outBuf && outBufSize >= len)
+        memcpy(outBuf, result, len * sizeof(QSP_CHAR));
+    free(result);
+    return len;
+}
+
+int t2gWriteTextData(const QSP_CHAR *text, QSP_BOOL isUnicode, char *outBuf, int outBufSize)
+{
+    int len = 0;
+    char *result = t2gEncodeTextData(text, isUnicode, &len);
+    if (!result) return -1;
+    if (outBuf && outBufSize >= len)
+        memcpy(outBuf, result, len);
+    free(result);
+    return len;
+}
 
 int t2gTextToGame(const QSP_CHAR *text, const QSP_CHAR *locStart, const QSP_CHAR *locEnd,
                   QSP_BOOL isOldFormat, QSP_BOOL isUnicode, const QSP_CHAR *password,
@@ -46,4 +69,19 @@ int t2gTextToStrings(const QSP_CHAR *text, const QSP_CHAR *locStart, const QSP_C
         memcpy(outBuf, strings, len * sizeof(QSP_CHAR));
     free(strings);
     return len;
+}
+
+char *t2gQSPStringToUTF8(const QSP_CHAR *s, int len)
+{
+    return qspQSPStringToUTF8((QSP_CHAR *)s, len);
+}
+
+QSP_CHAR *t2gUTF8ToQSPString(const char *s, int len)
+{
+    return qspUTF8ToQSPString((char *)s, len);
+}
+
+void t2gFreeData(void *ptr)
+{
+    free(ptr);
 }

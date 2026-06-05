@@ -5,19 +5,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "t2g_api.h"
-
-static int t2gWasmStrLen(const QSP_CHAR *s)
-{
-    const QSP_CHAR *ptr = s;
-    while (*ptr) ++ptr;
-    return (int)(ptr - s);
-}
+#include "../src/t2g_api.h"
 
 QSP_CHAR *t2gWasmParseTextData(const char *data, int dataLen, QSP_BOOL isUnicode, int *outLen)
 {
-    QSP_CHAR *result = t2gParseTextData(data, dataLen, isUnicode);
-    *outLen = result ? t2gWasmStrLen(result) : 0;
+    int len = 0;
+    QSP_CHAR *result = t2gParseTextData(data, dataLen, isUnicode, &len);
+    *outLen = len > 0 ? len - 1 : 0;
     return result;
 }
 

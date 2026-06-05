@@ -11,6 +11,6 @@
     #define QSP_SYSDEFINES
 
     /* External functions */
-    void qspPrint(const char *format, ...);
+    void t2gPrint(const char *format, ...);
 
 #endif

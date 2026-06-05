@@ -13,7 +13,7 @@
 #include <windows.h>
 #endif
 
-void qspPrint(const char *format, ...)
+void t2gPrint(const char *format, ...)
 {
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
@@ -40,7 +40,19 @@ void qspPrint(const char *format, ...)
                     printf("%u", val);
                     break;
                 }
+            case 'c':
+                {
+                    int val = va_arg(arg_list, int);
+                    printf("%c", val);
+                    break;
+                }
             case 's':
+                {
+                    char *val = va_arg(arg_list, char *);
+                    printf("%s", val);
+                    break;
+                }
+            case 'S':
                 {
                     QSP_CHAR *val = va_arg(arg_list, QSP_CHAR *);
                     char *utf8 = qspQSPStringToUTF8(val, -1);

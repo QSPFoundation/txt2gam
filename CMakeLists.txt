@@ -60,6 +60,7 @@ set(TXT2GAM_LIB_SOURCES
 	src/t2g_api.c
 	src/text.c
 	src/sys.c
+	bindings/default/t2g_default.c
 )
 add_library(txt2gam ${TXT2GAM_LIB_SOURCES})
 if (WIN32)
@@ -72,8 +73,10 @@ target_compile_options(txt2gam PRIVATE ${PROJECT_COMPILER_FLAGS})
 target_link_options(txt2gam PRIVATE ${PROJECT_LINKER_FLAGS})
 
 target_include_directories(txt2gam
+	PRIVATE
+		"${CMAKE_CURRENT_SOURCE_DIR}/bindings/default"
 	INTERFACE
-		"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
+		"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/bindings/default>"
 		"$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
 		"$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/txt2gam>"
 )
@@ -90,14 +93,8 @@ export(TARGETS txt2gam NAMESPACE Txt2gam:: FILE "${CMAKE_CURRENT_BINARY_DIR}/Txt
 install(TARGETS txt2gam EXPORT Txt2gamTargets)
 
 install(FILES
-		src/coding.h
-		src/declarations.h
-		src/locations.h
-		src/locdata.h
-		src/sys.h
-		src/t2g_api.h
-		src/t2g_types.h
-		src/text.h
+		bindings/default/t2g_default.h
+		bindings/default/t2g_types.h
 		"${CMAKE_CURRENT_BINARY_DIR}/txt2gam_config.h"
 		"${CMAKE_CURRENT_BINARY_DIR}/txt2gam_export.h"
 	DESTINATION
@@ -118,7 +115,6 @@ if (PROJECT_IS_TOP_LEVEL)
 	if (EMSCRIPTEN)
 		add_subdirectory(bindings/wasm)
 	else()
-		add_subdirectory(bindings/default)
 		add_subdirectory(app)
 	endif()
 endif()

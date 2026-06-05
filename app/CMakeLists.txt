@@ -3,7 +3,7 @@ set_target_properties(txt2gam_app PROPERTIES OUTPUT_NAME txt2gam)
 target_include_directories(txt2gam_app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_compile_options(txt2gam_app PRIVATE ${PROJECT_COMPILER_FLAGS})
 target_link_options(txt2gam_app PRIVATE ${PROJECT_LINKER_FLAGS})
-target_link_libraries(txt2gam_app PRIVATE txt2gam_default)
+target_link_libraries(txt2gam_app PRIVATE txt2gam)
 
 if (WIN32)
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT txt2gam_app)
@@ -30,8 +30,8 @@ else()
 	message(FATAL_ERROR "Platform is not supported")
 endif()
 
-set_target_properties(txt2gam txt2gam_default txt2gam_app PROPERTIES INSTALL_RPATH "${INSTALL_RPATH}")
-install(TARGETS txt2gam txt2gam_default txt2gam_app
+set_target_properties(txt2gam txt2gam_app PROPERTIES INSTALL_RPATH "${INSTALL_RPATH}")
+install(TARGETS txt2gam txt2gam_app
 	RUNTIME DESTINATION ${BINDIR}
 	LIBRARY DESTINATION ${RLIBDIR}
 	ARCHIVE DESTINATION ${LIBDIR})

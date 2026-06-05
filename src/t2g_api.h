@@ -23,7 +23,8 @@
     void t2gTerminate(void);
 
     /*
-     * Parse raw text bytes into a null-terminated QSP_CHAR string.
+     * Parse raw text bytes (with optional BOM) into a malloc'd null-terminated
+     * QSP_CHAR string.
      *
      * Encoding is determined in this order:
      *  1. UTF-16 LE BOM (FF FE) → UTF-16 LE
@@ -31,21 +32,32 @@
      *  3. Leading null byte heuristic → UTF-16 LE without BOM
      *  4. isUnicode fallback: QSP_TRUE → UTF-8, QSP_FALSE → ANSI/CP1251
      *
-     * data      - raw text bytes (copied internally; not modified)
+     * data      - raw text bytes
      * dataLen   - number of bytes in data
-     * isUnicode - fallback when no BOM is found: QSP_TRUE = UTF-8, QSP_FALSE = ANSI
+     * isUnicode - fallback when no BOM is found
+     * outLen    - receives the character count (incl. null terminator)
      *
      * Line endings are normalised to \n.
-     * Returns a malloc'd null-terminated QSP_CHAR string. Caller must free.
-     * Returns 0 on error.
+     * Returns a malloc'd QSP_CHAR string. Caller must free. Returns 0 on error.
      */
-    QSP_CHAR *t2gParseTextData(const char *data, int dataLen, QSP_BOOL isUnicode);
+    QSP_CHAR *t2gParseTextData(const char *data, int dataLen, QSP_BOOL isUnicode, int *outLen);
+
+    /*
+     * Encode a null-terminated QSP_CHAR string to raw text bytes.
+     *
+     * isUnicode  - QSP_TRUE: UTF-8 with UTF-8 BOM prepended
+     *              QSP_FALSE: ANSI/CP1251, no BOM
+     * outLen     - receives the byte count (without null terminator)
+     *
+     * Returns a malloc'd char buffer. Caller must free. Returns 0 on error.
+     */
+    char *t2gEncodeTextData(const QSP_CHAR *text, QSP_BOOL isUnicode, int *outLen);
 
     /*
      * Convert a QSP_CHAR text source to QSP binary game data.
      *
      * text        - null-terminated QSP_CHAR source text (line endings must be
-     *               normalised to \n, e.g. via t2gParseTextData)
+     *               normalised to \n, e.g. via t2gReadTextData)
      * locStart    - null-terminated location-start marker, or 0 for T2G_STARTLOC ("#")
      * locEnd      - null-terminated location-end marker, or 0 for T2G_ENDLOC ("--")
      * isOldFormat - QSP_TRUE to save in the old QSP format, QSP_FALSE for new
