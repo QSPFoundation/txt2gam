@@ -379,7 +379,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd)
                 else
                     qspLocs[curLoc].Name = qspDelSpc(data);
 
-                t2gPrint("Location: %s\n", qspLocs[curLoc].Name);
+                t2gPrint("Location: %S\n", qspLocs[curLoc].Name);
                 locCodeLen = 0; /* reuse the code buffer */
                 isInLoc = QSP_TRUE;
                 isInBaseSection = QSP_FALSE;
@@ -445,7 +445,7 @@ char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUnicode, QSP_CHAR *passwd, i
     }
     for (i = 0; i < qspLocsCount; ++i)
     {
-        t2gPrint("Saving location: %s\n", qspLocs[i].Name);
+        t2gPrint("Saving location: %S\n", qspLocs[i].Name);
 
         len = qspGameCodeWriteValLine(&buf, len, qspLocs[i].Name, isUnicode, QSP_TRUE);
         len = qspGameCodeWriteValLine(&buf, len, qspLocs[i].Desc, isUnicode, QSP_TRUE);
@@ -523,7 +523,7 @@ QSP_BOOL qspOpenQuest(char *data, int dataSize, QSP_CHAR *password)
         qspLocs[i].Desc = qspSegToStr(strs[ind++], isUnicode, QSP_TRUE);
         qspLocs[i].OnVisit = qspSegToStr(strs[ind++], isUnicode, QSP_TRUE);
 
-        t2gPrint("Location: %s\n", qspLocs[i].Name);
+        t2gPrint("Location: %S\n", qspLocs[i].Name);
 
         if (isOldFormat)
             actsCount = 20;
@@ -556,7 +556,7 @@ QSP_CHAR *qspSaveQuestAsText(QSP_CHAR *locStart, QSP_CHAR *locEnd)
     QSP_CHAR *temp, *buf = qspAllocateBuffer(bufSize);
     for (i = 0; i < qspLocsCount; ++i)
     {
-        t2gPrint("Saving location: %s\n", qspLocs[i].Name);
+        t2gPrint("Saving location: %S\n", qspLocs[i].Name);
 
         /* Write location header */
         len = qspAddTextToBuffer(&buf, locStart, -1, len, &bufSize);
