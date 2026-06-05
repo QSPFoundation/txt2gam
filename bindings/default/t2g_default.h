@@ -125,7 +125,7 @@
 
     /*
      * Formatted diagnostic output (to stdout).
-     * Supported specifiers: %d/%i (int), %u (unsigned int), %c (char), %s (QSP_CHAR*).
+     * Supported specifiers: %d/%i (int), %u (unsigned int), %c (char), %s (char*), %S (QSP_CHAR*).
      */
     void t2gPrint(const char *format, ...);
 
