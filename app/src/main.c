@@ -231,80 +231,89 @@ int main(int argc, char **argv)
     passwd = 0;
     for (i = 1; i < argc; ++i)
     {
+        char opt;
+        char *val;
         if (argv[i][0] == '-' && argv[i][1])
         {
-            char opt = argv[i][1];
+            opt = argv[i][1];
             /* Value may be attached (-pFoo) or separate (-p Foo) */
-            char *val = argv[i][2] ? argv[i] + 2 : 0;
-            switch (opt)
-            {
-            case 'h': case 'H':
-                workMode = QSP_SHOW_HELP;
-                break;
-            case 'o': case 'O':
-                isOldFormat = QSP_TRUE;
-                break;
-            case 'a': case 'A':
-                isUnicode = QSP_FALSE;
-                break;
-            case 'c': case 'C':
-                workMode = QSP_ENCODE_INTO_GAME;
-                break;
-            case 'd': case 'D':
-                workMode = QSP_DECODE_INTO_TEXT;
-                break;
-            case 't': case 'T':
-                workMode = QSP_EXTRACT_STRINGS;
-                break;
-            case 'q': case 'Q':
-                workMode = QSP_EXTRACT_QSTRINGS;
-                break;
-            case 's': case 'S':
-            case 'e': case 'E':
-            case 'p': case 'P':
-                if (!val)
-                {
-                    if (i + 1 >= argc)
-                    {
-                        t2gPrint("Option -%c requires an argument\n", opt);
-                        workMode = QSP_ERROR;
-                        break;
-                    }
-                    val = argv[++i];
-                }
-                switch (opt)
-                {
-                case 's': case 'S':
-                    t2gFreeData(locStart);
-                    locStart = t2gUTF8ToQSPString(val, -1);
-                    if (!locStart) { t2gPrint("Loc start value is invalid\n"); workMode = QSP_ERROR; }
-                    break;
-                case 'e': case 'E':
-                    t2gFreeData(locEnd);
-                    locEnd = t2gUTF8ToQSPString(val, -1);
-                    if (!locEnd) { t2gPrint("Loc end value is invalid\n"); workMode = QSP_ERROR; }
-                    break;
-                case 'p': case 'P':
-                    t2gFreeData(passwd);
-                    passwd = t2gUTF8ToQSPString(val, -1);
-                    if (!passwd) { t2gPrint("Password is invalid\n"); workMode = QSP_ERROR; }
-                    break;
-                }
-                break;
-            default:
-                t2gPrint("Unknown option: -%c\n", opt);
-                workMode = QSP_ERROR;
-                break;
-            }
+            val = argv[i][2] ? argv[i] + 2 : 0;
         }
         else if (!inFile)
+        {
             inFile = argv[i];
+            continue;
+        }
         else if (!outFile)
+        {
             outFile = argv[i];
+            continue;
+        }
         else
         {
-            t2gPrint("Unexpected argument: %s\n", argv[i]);
+            /* Legacy no-dash format (deprecated): bare option after both filenames */
+            opt = argv[i][0];
+            val = argv[i][1] ? argv[i] + 1 : 0;
+        }
+        switch (opt)
+        {
+        case 'h': case 'H':
+            workMode = QSP_SHOW_HELP;
+            break;
+        case 'o': case 'O':
+            isOldFormat = QSP_TRUE;
+            break;
+        case 'a': case 'A':
+            isUnicode = QSP_FALSE;
+            break;
+        case 'c': case 'C':
+            workMode = QSP_ENCODE_INTO_GAME;
+            break;
+        case 'd': case 'D':
+            workMode = QSP_DECODE_INTO_TEXT;
+            break;
+        case 't': case 'T':
+            workMode = QSP_EXTRACT_STRINGS;
+            break;
+        case 'q': case 'Q':
+            workMode = QSP_EXTRACT_QSTRINGS;
+            break;
+        case 's': case 'S':
+        case 'e': case 'E':
+        case 'p': case 'P':
+            if (!val)
+            {
+                if (i + 1 >= argc)
+                {
+                    t2gPrint("Option %c requires an argument\n", opt);
+                    workMode = QSP_ERROR;
+                    break;
+                }
+                val = argv[++i];
+            }
+            switch (opt)
+            {
+            case 's': case 'S':
+                t2gFreeData(locStart);
+                locStart = t2gUTF8ToQSPString(val, -1);
+                if (!locStart) { t2gPrint("Loc start value is invalid\n"); workMode = QSP_ERROR; }
+                break;
+            case 'e': case 'E':
+                t2gFreeData(locEnd);
+                locEnd = t2gUTF8ToQSPString(val, -1);
+                if (!locEnd) { t2gPrint("Loc end value is invalid\n"); workMode = QSP_ERROR; }
+                break;
+            case 'p': case 'P':
+                t2gFreeData(passwd);
+                passwd = t2gUTF8ToQSPString(val, -1);
+                if (!passwd) { t2gPrint("Password is invalid\n"); workMode = QSP_ERROR; }
+                break;
+            }
+            break;
+        default:
+            t2gPrint("Unknown option: %c\n", opt);
             workMode = QSP_ERROR;
+            break;
         }
         if (workMode == QSP_ERROR)
             break;
