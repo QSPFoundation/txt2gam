@@ -83,5 +83,5 @@ QSP_CHAR *t2gUTF8ToQSPString(const char *s, int len)
 
 void t2gFreeData(void *ptr)
 {
-    free(ptr);
+    if (ptr) free(ptr);
 }

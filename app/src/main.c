@@ -34,7 +34,12 @@ static QSP_BOOL qspLoadTextFile(char *file, QSP_BOOL isUnicode, QSP_CHAR **outDa
     FILE *f;
     if (!(f = fopen(file, "rb"))) return QSP_FALSE;
     fseek(f, 0, SEEK_END);
-    fileSize = ftell(f);
+    fileSize = (int)ftell(f);
+    if (fileSize < 0)
+    {
+        fclose(f);
+        return QSP_FALSE;
+    }
     buf = (char *)malloc(fileSize);
     fseek(f, 0, SEEK_SET);
     fread(buf, 1, fileSize, f);
@@ -143,14 +148,18 @@ static QSP_BOOL qspEncodeTextToGame(char *inFile, char *outFile, QSP_BOOL isUnic
 
 static QSP_BOOL qspDecodeGameToText(char *inFile, char *outFile, QSP_BOOL isUnicode, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_CHAR *passwd)
 {
-    int textSize;
-    long fileSize;
+    int textSize, fileSize;
     char *binData;
     QSP_CHAR *textBuf;
     FILE *f;
     if (!(f = fopen(inFile, "rb"))) return QSP_FALSE;
     fseek(f, 0, SEEK_END);
-    fileSize = ftell(f);
+    fileSize = (int)ftell(f);
+    if (fileSize < 0)
+    {
+        fclose(f);
+        return QSP_FALSE;
+    }
     binData = (char *)malloc((size_t)fileSize);
     fseek(f, 0, SEEK_SET);
     fread(binData, 1, (size_t)fileSize, f);
