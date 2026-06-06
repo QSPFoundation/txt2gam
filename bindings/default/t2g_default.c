@@ -6,8 +6,8 @@
  */
 
 #include "t2g_default.h"
-#include "../src/t2g_api.h"
-#include "../src/coding.h"
+#include "t2g_api.h"
+#include "coding.h"
 #include <stdlib.h>
 #include <string.h>
 

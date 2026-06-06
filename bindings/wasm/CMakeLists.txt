@@ -1,6 +1,8 @@
 add_executable(txt2gam_wasm t2g_wasm.c)
 target_include_directories(txt2gam_wasm
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
 )
 target_compile_options(txt2gam_wasm PRIVATE ${PROJECT_COMPILER_FLAGS})
 target_link_libraries(txt2gam_wasm PRIVATE txt2gam)

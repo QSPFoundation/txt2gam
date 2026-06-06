@@ -178,7 +178,7 @@ QSP_CHAR *qspStrStr(QSP_CHAR *str, QSP_CHAR *strSearch)
 QSP_CHAR *qspStrCopy(QSP_CHAR *strDest, QSP_CHAR *strSource)
 {
     QSP_CHAR *ret = strDest;
-    while (*strDest++ = *strSource++);
+    while ((*strDest++ = *strSource++));
     return ret;
 }
 

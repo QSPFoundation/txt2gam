@@ -8,7 +8,10 @@
 #ifndef T2G_TYPES_H
     #define T2G_TYPES_H
 
+    /* char16_t is a C11 keyword on Apple Clang; uchar.h is not shipped by Apple. */
+    #if !defined(__APPLE__)
     #include <uchar.h>
+    #endif
 
     /* QSP_CHAR is a fixed 16-bit UTF-16 code unit on every platform. */
     typedef char16_t QSP_CHAR;

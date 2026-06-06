@@ -74,6 +74,7 @@ target_link_options(txt2gam PRIVATE ${PROJECT_LINKER_FLAGS})
 
 target_include_directories(txt2gam
 	PRIVATE
+		"${CMAKE_CURRENT_SOURCE_DIR}/src"
 		"${CMAKE_CURRENT_SOURCE_DIR}/bindings/default"
 	INTERFACE
 		"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/bindings/default>"

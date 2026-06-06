@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "../src/t2g_api.h"
+#include "t2g_api.h"
 
 QSP_CHAR *t2gWasmParseTextData(const char *data, int dataLen, QSP_BOOL isUnicode, int *outLen)
 {
