@@ -18,7 +18,7 @@ emcmake cmake -S . -B $WASM_BUILD_DIR \
     -DCPACK_GENERATOR="ZIP" \
     -DCMAKE_BUILD_TYPE=Release
 
-emmake make -C $WASM_BUILD_DIR --jobs=$(nproc)
+cmake --build $WASM_BUILD_DIR --parallel $(nproc)
 cpack -B $WASM_BUILD_DIR --config $WASM_BUILD_DIR/CPackConfig.cmake
 
 mkdir -p ./dist
