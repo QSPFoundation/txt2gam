@@ -343,15 +343,15 @@ int main(int argc, char **argv)
     {
         case QSP_EXTRACT_STRINGS:
         case QSP_EXTRACT_QSTRINGS:
-            if (isErr = !qspExportStrings(inFile, outFile, locStart, locEnd, workMode == QSP_EXTRACT_QSTRINGS, isUnicode))
+            if ((isErr = !qspExportStrings(inFile, outFile, locStart, locEnd, workMode == QSP_EXTRACT_QSTRINGS, isUnicode)))
                 t2gPrint("String extraction has failed!\n");
             break;
         case QSP_ENCODE_INTO_GAME:
-            if (isErr = !qspEncodeTextToGame(inFile, outFile, isUnicode, locStart, locEnd, isOldFormat, passwd))
+            if ((isErr = !qspEncodeTextToGame(inFile, outFile, isUnicode, locStart, locEnd, isOldFormat, passwd)))
                 t2gPrint("Encoding text to game has failed!\n");
             break;
         case QSP_DECODE_INTO_TEXT:
-            if (isErr = !qspDecodeGameToText(inFile, outFile, isUnicode, locStart, locEnd, passwd))
+            if ((isErr = !qspDecodeGameToText(inFile, outFile, isUnicode, locStart, locEnd, passwd)))
                 t2gPrint("Decoding game to text has failed!\n");
             break;
     }
