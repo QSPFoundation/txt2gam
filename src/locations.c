@@ -14,7 +14,7 @@
 QSPLocation *qspLocs = 0;
 int qspLocsCount = 0;
 
-static QSP_BOOL qspCheckQuest(QSPGameSeg *strs, int count, QSP_BOOL isUnicode, QSP_CHAR *password);
+static int qspCheckQuest(QSPGameSeg *strs, int count, QSP_BOOL isUnicode, QSP_CHAR *password);
 static void qspInitLocation(QSPLocation *loc);
 
 static void qspInitLocation(QSPLocation *loc)
@@ -27,7 +27,7 @@ static QSP_CHAR *qspSegToStr(QSPGameSeg seg, QSP_BOOL isUnicode, QSP_BOOL isCode
     return qspGameToQSPString(seg.Str, seg.Len, isUnicode, isCoded);
 }
 
-static QSP_BOOL qspCheckQuest(QSPGameSeg *strs, int count, QSP_BOOL isUnicode, QSP_CHAR *password)
+static int qspCheckQuest(QSPGameSeg *strs, int count, QSP_BOOL isUnicode, QSP_CHAR *password)
 {
     int i, ind, locsCount, actsCount;
     QSP_BOOL isOldFormat, hasInvalidPassword;
@@ -35,34 +35,34 @@ static QSP_BOOL qspCheckQuest(QSPGameSeg *strs, int count, QSP_BOOL isUnicode, Q
     isOldFormat = qspStrsComp(buf, QSP_GAMEID) != 0;
     free(buf);
     ind = (isOldFormat ? 30 : 4);
-    if (ind > count) return QSP_FALSE;
+    if (ind > count) return T2G_ERROR_INVALID_DATA;
     buf = (isOldFormat ? qspSegToStr(strs[1], isUnicode, QSP_TRUE) : qspSegToStr(strs[2], isUnicode, QSP_TRUE));
     hasInvalidPassword = qspStrsComp(buf, password);
     free(buf);
 #ifdef SPEC_PASS
     hasInvalidPassword = hasInvalidPassword && qspStrsComp(QSP_FMT(SPEC_PASS), password);
 #endif
-    if (hasInvalidPassword) return QSP_FALSE;
+    if (hasInvalidPassword) return T2G_ERROR_WRONG_PASSWORD;
     buf = (isOldFormat ? qspSegToStr(strs[0], isUnicode, QSP_FALSE) : qspSegToStr(strs[3], isUnicode, QSP_TRUE));
     locsCount = qspStrToNum(buf, 0);
     free(buf);
-    if (locsCount <= 0) return QSP_FALSE;
+    if (locsCount <= 0) return T2G_ERROR_INVALID_DATA;
     for (i = 0; i < locsCount; ++i)
     {
-        if ((ind += 3) > count) return QSP_FALSE;
+        if ((ind += 3) > count) return T2G_ERROR_INVALID_DATA;
         if (isOldFormat)
             actsCount = 20;
         else
         {
-            if (ind + 1 > count) return QSP_FALSE;
+            if (ind + 1 > count) return T2G_ERROR_INVALID_DATA;
             buf = qspSegToStr(strs[ind++], isUnicode, QSP_TRUE);
             actsCount = qspStrToNum(buf, 0);
             free(buf);
-            if (actsCount < 0 || actsCount > QSP_MAXACTIONS) return QSP_FALSE;
+            if (actsCount < 0 || actsCount > QSP_MAXACTIONS) return T2G_ERROR_INVALID_DATA;
         }
-        if ((ind += (actsCount * (isOldFormat ? 2 : 3))) > count) return QSP_FALSE;
+        if ((ind += (actsCount * (isOldFormat ? 2 : 3))) > count) return T2G_ERROR_INVALID_DATA;
     }
-    return QSP_TRUE;
+    return T2G_ERROR_NONE;
 }
 
 void qspCreateWorld(int locsCount)
@@ -426,7 +426,7 @@ char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUnicode, QSP_CHAR *passwd, i
     time(&currentTime);
     localTime = localtime(&currentTime);
     strftime(dateBuf, QSP_DATESTRSIZE, "%Y-%m-%d", localTime);
-    snprintf(narrowInfo, QSP_VERINFOSIZE, "%s (%s %s)", dateBuf, QSP_APPNAME, TXT2GAM_VER_STR);
+    snprintf(narrowInfo, QSP_VERINFOSIZE, "%s (%s %s)", dateBuf, T2G_APPNAME, TXT2GAM_VER_STR);
     verInfo = qspUTF8ToQSPString(narrowInfo, -1);
 
     if (isOldFormat)
@@ -495,19 +495,20 @@ char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUnicode, QSP_CHAR *passwd, i
     return buf;
 }
 
-QSP_BOOL qspOpenQuest(char *data, int dataSize, QSP_CHAR *password)
+int qspOpenQuest(char *data, int dataSize, QSP_CHAR *password)
 {
     QSP_BOOL isOldFormat, isUnicode;
-    int i, j, ind, count, locsCount, actsCount;
+    int err, i, j, ind, count, locsCount, actsCount;
     QSP_CHAR *buf;
     QSPGameSeg *strs;
     /* Parse the data */
-    if (dataSize < 2) return QSP_FALSE;
+    if (dataSize < 2) return T2G_ERROR_INVALID_DATA;
     count = qspSplitGameData(data, dataSize, isUnicode = !data[1], &strs);
-    if (!qspCheckQuest(strs, count, isUnicode, password))
+    err = qspCheckQuest(strs, count, isUnicode, password);
+    if (err != T2G_ERROR_NONE)
     {
         free(strs);
-        return QSP_FALSE;
+        return err;
     }
     buf = qspSegToStr(strs[0], isUnicode, QSP_FALSE);
     isOldFormat = qspStrsComp(buf, QSP_GAMEID) != 0;
@@ -545,7 +546,7 @@ QSP_BOOL qspOpenQuest(char *data, int dataSize, QSP_CHAR *password)
     t2gPrint("%d locations were loaded\n", locsCount);
 
     free(strs);
-    return QSP_TRUE;
+    return T2G_ERROR_NONE;
 }
 
 QSP_CHAR *qspSaveQuestAsText(QSP_CHAR *locStart, QSP_CHAR *locEnd)

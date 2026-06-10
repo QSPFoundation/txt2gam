@@ -10,12 +10,46 @@
  *
  *   const module = await createT2gModule();
  *   const t2g = new module.Txt2gam();
- *   const gameBytes = t2g.textToGame(text, null, null, false, false, null);
- *   const text = t2g.gameToText(gameUint8Array, null, null, null);
- *   t2g.destroy();
+ *   try {
+ *       const gameBytes = t2g.textToGame(text, null, null, false, false, null);
+ *       const text = t2g.gameToText(gameUint8Array, null, null, null);
+ *   } catch (e) {
+ *       if (e instanceof module.T2gError && e.code === module.T2G_ERROR_WRONG_PASSWORD) { ... }
+ *   } finally {
+ *       t2g.destroy();
+ *   }
  */
 
 (function () {
+    /* Error codes (mirror of the T2G_ERROR_* enum in t2g_types.h). */
+    Module['T2G_ERROR_NONE']           = 0;
+    Module['T2G_ERROR_FAILED']         = 1;
+    Module['T2G_ERROR_INVALID_DATA']   = 2;
+    Module['T2G_ERROR_WRONG_PASSWORD'] = 3;
+    Module['T2G_ERROR_NO_MEMORY']      = 10;
+
+    /* Human-readable message for each error code. Add new codes here. */
+    var ERROR_MESSAGES = {
+        [Module['T2G_ERROR_FAILED']]:         'Operation failed',
+        [Module['T2G_ERROR_INVALID_DATA']]:   'Invalid or corrupt data',
+        [Module['T2G_ERROR_WRONG_PASSWORD']]: 'Wrong password',
+        [Module['T2G_ERROR_NO_MEMORY']]:      'Out of memory'
+    };
+
+    /**
+     * Error thrown by Txt2gam methods on failure.
+     * @property {number} code  One of the module.T2G_ERROR_* constants.
+     */
+    function T2gError(code) {
+        this.name = 'T2gError';
+        this.code = code;
+        this.message = ERROR_MESSAGES[code] || ('Unknown error (code ' + code + ')');
+        if (Error.captureStackTrace) Error.captureStackTrace(this, T2gError);
+    }
+    T2gError.prototype = Object.create(Error.prototype);
+    T2gError.prototype.constructor = T2gError;
+    Module['T2gError'] = T2gError;
+
     /* Allocate a null-terminated UTF-16LE buffer for str. Returns 0 for null/undefined. */
     function allocStr(str) {
         if (str == null) return 0;
@@ -30,6 +64,28 @@
         Module.HEAPU8.set(bytes, ptr);
         return ptr;
     }
+
+    /*
+     * Tracks every pointer allocated for a single call so they can all be
+     * released at once, regardless of how many arguments a call has.
+     */
+    function Args() {
+        this._ptrs = [];
+    }
+    Args.prototype.str = function (str) {
+        var ptr = allocStr(str);
+        this._ptrs.push(ptr);
+        return ptr;
+    };
+    Args.prototype.bytes = function (bytes) {
+        var ptr = allocBytes(bytes);
+        this._ptrs.push(ptr);
+        return ptr;
+    };
+    Args.prototype.free = function () {
+        for (var i = 0; i < this._ptrs.length; i++) Module._free(this._ptrs[i]);
+        this._ptrs.length = 0;
+    };
 
     function consumeBytes(ptr, lenPtr) {
         if (!ptr) return null;
@@ -64,19 +120,26 @@
             this.lenPtr = 0;
         };
 
+        function checkError() {
+            var code = Module._t2gWasmGetLastError();
+            if (code !== Module['T2G_ERROR_NONE']) throw new T2gError(code);
+        }
+
         /**
          * Parse raw text data (with optional BOM) to a JS string.
          *
          * @param {Uint8Array} data
          * @param {boolean} isUnicode  Encoding hint when no BOM is present.
-         * @returns {string|null}
+         * @returns {string}
+         * @throws {T2gError}
          */
         Txt2gam.prototype.parseText = function (data, isUnicode) {
-            var dataPtr   = allocBytes(data);
+            var args = new Args();
             var resultPtr = Module._t2gWasmParseTextData(
-                dataPtr, data.length, isUnicode ? 1 : 0, this.lenPtr
+                args.bytes(data), data.length, isUnicode ? 1 : 0, this.lenPtr
             );
-            Module._free(dataPtr);
+            args.free();
+            checkError();
             return consumeStr(resultPtr, this.lenPtr);
         };
 
@@ -89,24 +152,17 @@
          * @param {boolean} isOldFormat
          * @param {boolean} isUnicode      True to encode game in Unicode.
          * @param {string|null} password   Password, or null for "No".
-         * @returns {Uint8Array|null}
+         * @returns {Uint8Array}
+         * @throws {T2gError}
          */
         Txt2gam.prototype.textToGame = function (text, locStart, locEnd, isOldFormat, isUnicode, password) {
-            var textPtr     = allocStr(text);
-            var locStartPtr = allocStr(locStart);
-            var locEndPtr   = allocStr(locEnd);
-            var passwdPtr   = allocStr(password);
-
+            var args = new Args();
             var resultPtr = Module._t2gWasmEncodeTextToGame(
-                textPtr, locStartPtr, locEndPtr,
-                isOldFormat ? 1 : 0, isUnicode ? 1 : 0, passwdPtr, this.lenPtr
+                args.str(text), args.str(locStart), args.str(locEnd),
+                isOldFormat ? 1 : 0, isUnicode ? 1 : 0, args.str(password), this.lenPtr
             );
-
-            Module._free(textPtr);
-            Module._free(locStartPtr);
-            Module._free(locEndPtr);
-            Module._free(passwdPtr);
-
+            args.free();
+            checkError();
             return consumeBytes(resultPtr, this.lenPtr);
         };
 
@@ -117,24 +173,17 @@
          * @param {string|null} password   Password, or null for "No".
          * @param {string|null} locStart   Location-start marker, or null for "#".
          * @param {string|null} locEnd     Location-end marker, or null for "--".
-         * @returns {string|null}
+         * @returns {string}
+         * @throws {T2gError}
          */
         Txt2gam.prototype.gameToText = function (gameBytes, password, locStart, locEnd) {
-            var dataPtr     = allocBytes(gameBytes);
-            var passwdPtr   = allocStr(password);
-            var locStartPtr = allocStr(locStart);
-            var locEndPtr   = allocStr(locEnd);
-
+            var args = new Args();
             var resultPtr = Module._t2gWasmDecodeGameToText(
-                dataPtr, gameBytes.length,
-                passwdPtr, locStartPtr, locEndPtr, this.lenPtr
+                args.bytes(gameBytes), gameBytes.length,
+                args.str(password), args.str(locStart), args.str(locEnd), this.lenPtr
             );
-
-            Module._free(dataPtr);
-            Module._free(passwdPtr);
-            Module._free(locStartPtr);
-            Module._free(locEndPtr);
-
+            args.free();
+            checkError();
             return consumeStr(resultPtr, this.lenPtr);
         };
 
@@ -145,21 +194,16 @@
          * @param {string|null} locStart   Location-start marker, or null for "#".
          * @param {string|null} locEnd     Location-end marker, or null for "--".
          * @param {boolean} toGetQStrings  True to extract q-strings, false for strings.
-         * @returns {string|null}          Extracted strings, or null on error.
+         * @returns {string}
+         * @throws {T2gError}
          */
         Txt2gam.prototype.extractStrings = function (text, locStart, locEnd, toGetQStrings) {
-            var textPtr     = allocStr(text);
-            var locStartPtr = allocStr(locStart);
-            var locEndPtr   = allocStr(locEnd);
-
+            var args = new Args();
             var resultPtr = Module._t2gWasmExtractStrings(
-                textPtr, locStartPtr, locEndPtr, toGetQStrings ? 1 : 0, this.lenPtr
+                args.str(text), args.str(locStart), args.str(locEnd), toGetQStrings ? 1 : 0, this.lenPtr
             );
-
-            Module._free(textPtr);
-            Module._free(locStartPtr);
-            Module._free(locEndPtr);
-
+            args.free();
+            checkError();
             return consumeStr(resultPtr, this.lenPtr);
         };
 

@@ -40,7 +40,7 @@
     QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toGetQStrings);
     int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd);
     char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUnicode, QSP_CHAR *passwd, int *dataLen);
-    QSP_BOOL qspOpenQuest(char *data, int dataSize, QSP_CHAR *password);
+    int qspOpenQuest(char *data, int dataSize, QSP_CHAR *password);
     QSP_CHAR *qspSaveQuestAsText(QSP_CHAR *locStart, QSP_CHAR *locEnd);
 
 #endif

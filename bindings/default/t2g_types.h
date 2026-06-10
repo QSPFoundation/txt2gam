@@ -26,4 +26,14 @@
     #define QSP_TRUE  1
     #define QSP_FALSE 0
 
+    /* Error codes returned by all API functions. */
+    enum
+    {
+        T2G_ERROR_NONE           = 0,
+        T2G_ERROR_FAILED         = 1,
+        T2G_ERROR_INVALID_DATA   = 2,
+        T2G_ERROR_WRONG_PASSWORD = 3,
+        T2G_ERROR_NO_MEMORY      = 10
+    };
+
 #endif /* T2G_TYPES_H */

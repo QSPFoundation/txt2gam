@@ -20,171 +20,200 @@ enum Mode
     QSP_EXTRACT_QSTRINGS
 };
 
-static QSP_BOOL qspLoadTextFile(char *file, QSP_BOOL isUnicode, QSP_CHAR **data);
-static QSP_BOOL qspSaveTextFile(char *file, QSP_CHAR *data, QSP_BOOL isUnicode);
-static QSP_BOOL qspExportStrings(char *file, char *outFile, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toGetQStrings, QSP_BOOL isUnicode);
-static QSP_BOOL qspEncodeTextToGame(char *inFile, char *outFile, QSP_BOOL isUnicode, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL isOldFormat, QSP_CHAR *passwd);
-static QSP_BOOL qspDecodeGameToText(char *inFile, char *outFile, QSP_BOOL isUnicode, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_CHAR *passwd);
+static void qspPrintError(const char *operation, int err);
+static int qspLoadTextFile(char *file, QSP_BOOL isUnicode, QSP_CHAR **data);
+static int qspSaveTextFile(char *file, QSP_CHAR *data, QSP_BOOL isUnicode);
+static int qspExportStrings(char *file, char *outFile, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toGetQStrings, QSP_BOOL isUnicode);
+static int qspEncodeTextToGame(char *inFile, char *outFile, QSP_BOOL isUnicode, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL isOldFormat, QSP_CHAR *passwd);
+static int qspDecodeGameToText(char *inFile, char *outFile, QSP_BOOL isUnicode, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_CHAR *passwd);
 
-static QSP_BOOL qspLoadTextFile(char *file, QSP_BOOL isUnicode, QSP_CHAR **outData)
+static void qspPrintError(const char *operation, int err)
 {
-    int fileSize, textSize;
+    switch (err)
+    {
+    case T2G_ERROR_WRONG_PASSWORD:
+        t2gPrint("%s failed: wrong password!\n", operation);
+        break;
+    case T2G_ERROR_INVALID_DATA:
+        t2gPrint("%s failed: invalid or corrupt data!\n", operation);
+        break;
+    case T2G_ERROR_NO_MEMORY:
+        t2gPrint("%s failed: out of memory!\n", operation);
+        break;
+    default:
+        t2gPrint("%s failed!\n", operation);
+        break;
+    }
+}
+
+static int qspLoadTextFile(char *file, QSP_BOOL isUnicode, QSP_CHAR **outData)
+{
+    int err, fileSize, textSize;
     char *buf;
     QSP_CHAR *textBuf;
     FILE *f;
-    if (!(f = fopen(file, "rb"))) return QSP_FALSE;
+    if (!(f = fopen(file, "rb"))) return T2G_ERROR_FAILED;
     fseek(f, 0, SEEK_END);
     fileSize = (int)ftell(f);
     if (fileSize < 0)
     {
         fclose(f);
-        return QSP_FALSE;
+        return T2G_ERROR_FAILED;
     }
     buf = (char *)malloc(fileSize);
+    if (!buf)
+    {
+        fclose(f);
+        return T2G_ERROR_NO_MEMORY;
+    }
     fseek(f, 0, SEEK_SET);
     fread(buf, 1, fileSize, f);
     fclose(f);
     /* Call 1: get required buffer size */
-    textSize = t2gReadTextData(buf, fileSize, isUnicode, 0, 0);
-    if (textSize < 0)
+    err = t2gReadTextData(buf, fileSize, isUnicode, 0, 0, &textSize);
+    if (err != T2G_ERROR_NONE)
     {
         free(buf);
-        return QSP_FALSE;
+        return err;
     }
     textBuf = (QSP_CHAR *)malloc(textSize * sizeof(QSP_CHAR));
     if (!textBuf)
     {
         free(buf);
-        return QSP_FALSE;
+        return T2G_ERROR_NO_MEMORY;
     }
     /* Call 2: fill buffer */
-    t2gReadTextData(buf, fileSize, isUnicode, textBuf, textSize);
+    t2gReadTextData(buf, fileSize, isUnicode, textBuf, textSize, 0);
     free(buf);
     *outData = textBuf;
-    return QSP_TRUE;
+    return T2G_ERROR_NONE;
 }
 
-static QSP_BOOL qspSaveTextFile(char *file, QSP_CHAR *data, QSP_BOOL isUnicode)
+static int qspSaveTextFile(char *file, QSP_CHAR *data, QSP_BOOL isUnicode)
 {
     FILE *f;
-    int size;
+    int err, size;
     char *buf;
-    size = t2gWriteTextData(data, isUnicode, 0, 0);
-    if (size < 0) return QSP_FALSE;
+    err = t2gWriteTextData(data, isUnicode, 0, 0, &size);
+    if (err != T2G_ERROR_NONE) return err;
     buf = (char *)malloc(size);
-    if (!buf) return QSP_FALSE;
-    t2gWriteTextData(data, isUnicode, buf, size);
+    if (!buf) return T2G_ERROR_NO_MEMORY;
+    t2gWriteTextData(data, isUnicode, buf, size, 0);
     if (!(f = fopen(file, "wb")))
     {
         free(buf);
-        return QSP_FALSE;
+        return T2G_ERROR_FAILED;
     }
     fwrite(buf, 1, size, f);
     fclose(f);
     free(buf);
-    return QSP_TRUE;
+    return T2G_ERROR_NONE;
 }
 
-static QSP_BOOL qspExportStrings(char *file, char *outFile, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toGetQStrings, QSP_BOOL isUnicode)
+static int qspExportStrings(char *file, char *outFile, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toGetQStrings, QSP_BOOL isUnicode)
 {
     QSP_CHAR *data, *strBuf;
-    int len;
-    QSP_BOOL res;
-    if (!qspLoadTextFile(file, isUnicode, &data)) return QSP_FALSE;
+    int err, len;
+    err = qspLoadTextFile(file, isUnicode, &data);
+    if (err != T2G_ERROR_NONE) return err;
     /* Call 1: get required buffer size */
-    len = t2gTextToStrings(data, locStart, locEnd, toGetQStrings, 0, 0);
-    if (len < 0)
+    err = t2gTextToStrings(data, locStart, locEnd, toGetQStrings, 0, 0, &len);
+    if (err != T2G_ERROR_NONE)
     {
         free(data);
-        return QSP_FALSE;
+        return err;
     }
     strBuf = (QSP_CHAR *)malloc(len * sizeof(QSP_CHAR));
     if (!strBuf)
     {
         free(data);
-        return QSP_FALSE;
+        return T2G_ERROR_NO_MEMORY;
     }
     /* Call 2: fill buffer */
-    t2gTextToStrings(data, locStart, locEnd, toGetQStrings, strBuf, len);
+    t2gTextToStrings(data, locStart, locEnd, toGetQStrings, strBuf, len, 0);
     free(data);
-    res = qspSaveTextFile(outFile, strBuf, isUnicode);
+    err = qspSaveTextFile(outFile, strBuf, isUnicode);
     free(strBuf);
-    return res;
+    return err;
 }
 
-static QSP_BOOL qspEncodeTextToGame(char *inFile, char *outFile, QSP_BOOL isUnicode, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL isOldFormat, QSP_CHAR *passwd)
+static int qspEncodeTextToGame(char *inFile, char *outFile, QSP_BOOL isUnicode, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL isOldFormat, QSP_CHAR *passwd)
 {
-    int binSize;
+    int err, binSize;
     FILE *f;
     char *gameBuf;
     QSP_CHAR *textData;
-    if (!qspLoadTextFile(inFile, isUnicode, &textData)) return QSP_FALSE;
+    err = qspLoadTextFile(inFile, isUnicode, &textData);
+    if (err != T2G_ERROR_NONE) return err;
     /* Call 1: get required buffer size */
-    binSize = t2gTextToGame(textData, locStart, locEnd, isOldFormat, isUnicode, passwd, 0, 0);
-    if (binSize < 0)
+    err = t2gTextToGame(textData, locStart, locEnd, isOldFormat, isUnicode, passwd, 0, 0, &binSize);
+    if (err != T2G_ERROR_NONE)
     {
         free(textData);
-        return QSP_FALSE;
+        return err;
     }
     gameBuf = (char *)malloc(binSize);
     if (!gameBuf)
     {
         free(textData);
-        return QSP_FALSE;
+        return T2G_ERROR_NO_MEMORY;
     }
     /* Call 2: fill buffer */
-    t2gTextToGame(textData, locStart, locEnd, isOldFormat, isUnicode, passwd, gameBuf, binSize);
+    t2gTextToGame(textData, locStart, locEnd, isOldFormat, isUnicode, passwd, gameBuf, binSize, 0);
     free(textData);
     if (!(f = fopen(outFile, "wb")))
     {
         free(gameBuf);
-        return QSP_FALSE;
+        return T2G_ERROR_FAILED;
     }
     fwrite(gameBuf, 1, binSize, f);
     fclose(f);
     free(gameBuf);
-    return QSP_TRUE;
+    return T2G_ERROR_NONE;
 }
 
-static QSP_BOOL qspDecodeGameToText(char *inFile, char *outFile, QSP_BOOL isUnicode, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_CHAR *passwd)
+static int qspDecodeGameToText(char *inFile, char *outFile, QSP_BOOL isUnicode, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_CHAR *passwd)
 {
-    int textSize, fileSize;
+    int err, textSize, fileSize;
     char *binData;
     QSP_CHAR *textBuf;
     FILE *f;
-    if (!(f = fopen(inFile, "rb"))) return QSP_FALSE;
+    if (!(f = fopen(inFile, "rb"))) return T2G_ERROR_FAILED;
     fseek(f, 0, SEEK_END);
     fileSize = (int)ftell(f);
     if (fileSize < 0)
     {
         fclose(f);
-        return QSP_FALSE;
+        return T2G_ERROR_FAILED;
     }
-    binData = (char *)malloc((size_t)fileSize);
+    binData = (char *)malloc(fileSize);
+    if (!binData)
+    {
+        fclose(f);
+        return T2G_ERROR_NO_MEMORY;
+    }
     fseek(f, 0, SEEK_SET);
-    fread(binData, 1, (size_t)fileSize, f);
+    fread(binData, 1, fileSize, f);
     fclose(f);
     /* Call 1: get required text buffer size */
-    textSize = t2gGameToText(binData, fileSize, passwd, locStart, locEnd, 0, 0);
-    if (textSize < 0)
+    err = t2gGameToText(binData, fileSize, passwd, locStart, locEnd, 0, 0, &textSize);
+    if (err != T2G_ERROR_NONE)
     {
         free(binData);
-        return QSP_FALSE;
+        return err;
     }
     textBuf = (QSP_CHAR *)malloc(textSize * sizeof(QSP_CHAR));
     if (!textBuf)
     {
         free(binData);
-        return QSP_FALSE;
+        return T2G_ERROR_NO_MEMORY;
     }
     /* Call 2: fill buffer */
-    t2gGameToText(binData, fileSize, passwd, locStart, locEnd, textBuf, textSize);
+    t2gGameToText(binData, fileSize, passwd, locStart, locEnd, textBuf, textSize, 0);
     free(binData);
-    {
-        QSP_BOOL res = qspSaveTextFile(outFile, textBuf, isUnicode);
-        free(textBuf);
-        return res;
-    }
+    err = qspSaveTextFile(outFile, textBuf, isUnicode);
+    free(textBuf);
+    return err;
 }
 
 static void qspShowHelp(void)
@@ -216,8 +245,8 @@ static void qspShowHelp(void)
 
 int main(int argc, char **argv)
 {
-    int i, workMode;
-    QSP_BOOL isOldFormat, isUnicode, isErr;
+    int lastOpErr, i, workMode;
+    QSP_BOOL isOldFormat, isUnicode;
     QSP_CHAR *passwd, *locStart, *locEnd;
     char *inFile, *outFile;
     setlocale(LC_ALL, T2G_LOCALE);
@@ -338,26 +367,26 @@ int main(int argc, char **argv)
         t2gPrint("Can't initialize the loc processor!\n");
         return 1;
     }
-    isErr = QSP_FALSE;
+    lastOpErr = T2G_ERROR_NONE;
     switch (workMode)
     {
         case QSP_EXTRACT_STRINGS:
         case QSP_EXTRACT_QSTRINGS:
-            if ((isErr = !qspExportStrings(inFile, outFile, locStart, locEnd, workMode == QSP_EXTRACT_QSTRINGS, isUnicode)))
-                t2gPrint("String extraction has failed!\n");
+            lastOpErr = qspExportStrings(inFile, outFile, locStart, locEnd, workMode == QSP_EXTRACT_QSTRINGS, isUnicode);
+            if (lastOpErr != T2G_ERROR_NONE) qspPrintError("String extraction", lastOpErr);
             break;
         case QSP_ENCODE_INTO_GAME:
-            if ((isErr = !qspEncodeTextToGame(inFile, outFile, isUnicode, locStart, locEnd, isOldFormat, passwd)))
-                t2gPrint("Encoding text to game has failed!\n");
+            lastOpErr = qspEncodeTextToGame(inFile, outFile, isUnicode, locStart, locEnd, isOldFormat, passwd);
+            if (lastOpErr != T2G_ERROR_NONE) qspPrintError("Encoding", lastOpErr);
             break;
         case QSP_DECODE_INTO_TEXT:
-            if ((isErr = !qspDecodeGameToText(inFile, outFile, isUnicode, locStart, locEnd, passwd)))
-                t2gPrint("Decoding game to text has failed!\n");
+            lastOpErr = qspDecodeGameToText(inFile, outFile, isUnicode, locStart, locEnd, passwd);
+            if (lastOpErr != T2G_ERROR_NONE) qspPrintError("Decoding", lastOpErr);
             break;
     }
     t2gTerminate();
     t2gFreeData(locStart);
     t2gFreeData(locEnd);
     t2gFreeData(passwd);
-    return (isErr == QSP_TRUE);
+    return lastOpErr;
 }

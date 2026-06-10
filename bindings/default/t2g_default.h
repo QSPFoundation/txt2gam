@@ -31,15 +31,17 @@
     /*
      * Parse raw text bytes (with optional BOM) into a QSP_CHAR buffer.
      * outBuf = 0 on the first call (size query); second call fills the buffer.
-     * Returns the required / written QSP_CHAR count (incl. null terminator), or -1 on error.
+     * outSize receives the required / written QSP_CHAR count (incl. null terminator).
+     * Returns T2G_ERROR_NONE on success.
      */
-    int t2gReadTextData(const char *data, int dataLen, QSP_BOOL isUnicode, QSP_CHAR *outBuf, int outBufSize);
+    int t2gReadTextData(const char *data, int dataLen, QSP_BOOL isUnicode, QSP_CHAR *outBuf, int outBufSize, int *outSize);
 
     /*
      * Encode a null-terminated QSP_CHAR string to raw text bytes.
-     * Returns the required / written byte count, or -1 on error.
+     * outSize receives the required / written byte count.
+     * Returns T2G_ERROR_NONE on success.
      */
-    int t2gWriteTextData(const QSP_CHAR *text, QSP_BOOL isUnicode, char *outBuf, int outBufSize);
+    int t2gWriteTextData(const QSP_CHAR *text, QSP_BOOL isUnicode, char *outBuf, int outBufSize, int *outSize);
 
     /*
      * Convert a text game source to a QSP binary game file using a 2-call approach.
@@ -54,16 +56,16 @@
      * isUnicodeOut - QSP_TRUE to encode game strings as UTF-16, QSP_FALSE for ANSI
      * password    - null-terminated password, or 0 for the default ("No")
      * outBuf      - 0 on the first call (size query); on the second call a
-     *               caller-allocated buffer of at least the size returned by the
-     *               first call
+     *               caller-allocated buffer of at least *outSize bytes
      * outBufSize  - size of outBuf in bytes; ignored when outBuf is 0
+     * outSize     - receives the required (call 1) or written (call 2) byte count;
+     *               may be 0 on the second call
      *
-     * Returns the required (call 1) or written (call 2) buffer size in bytes,
-     * or -1 on error. Returns the required size if outBuf is too small.
+     * Returns T2G_ERROR_NONE on success.
      */
     int t2gTextToGame(const QSP_CHAR *text, const QSP_CHAR *locStart, const QSP_CHAR *locEnd,
                       QSP_BOOL isOldFormat, QSP_BOOL isUnicode, const QSP_CHAR *password,
-                      char *outBuf, int outBufSize);
+                      char *outBuf, int outBufSize, int *outSize);
 
     /*
      * Convert a QSP binary game file to a QSP_CHAR text source using a 2-call approach.
@@ -74,17 +76,17 @@
      * locStart    - null-terminated location-start marker, or 0 for the default ("#")
      * locEnd      - null-terminated location-end marker, or 0 for the default ("--")
      * outBuf      - 0 on the first call (size query); on the second call a
-     *               caller-allocated buffer of at least the size returned by the
-     *               first call
+     *               caller-allocated buffer of at least *outSize QSP_CHAR units
      * outBufSize  - size of outBuf in QSP_CHAR units; ignored when outBuf is 0
+     * outSize     - receives the required (call 1) or written (call 2) QSP_CHAR count
+     *               including the null terminator; may be 0 on the second call
      *
-     * Returns the required (call 1) or written (call 2) buffer size in QSP_CHAR
-     * units including the null terminator, or -1 on error. Returns the required
-     * size if outBuf is too small.
+     * Returns T2G_ERROR_NONE on success, T2G_ERROR_WRONG_PASSWORD if the password
+     * does not match.
      */
     int t2gGameToText(const char *data, int dataLen, const QSP_CHAR *password,
                       const QSP_CHAR *locStart, const QSP_CHAR *locEnd,
-                      QSP_CHAR *outBuf, int outBufSize);
+                      QSP_CHAR *outBuf, int outBufSize, int *outSize);
 
     /*
      * Extract the in-game strings (or q-strings) from a QSP_CHAR text source using
@@ -95,16 +97,15 @@
      * locEnd       - null-terminated location-end marker, or 0 for the default ("--")
      * toGetQStrings - QSP_TRUE to extract q-strings, QSP_FALSE for regular strings
      * outBuf       - 0 on the first call (size query); on the second call a
-     *                caller-allocated buffer of at least the size returned by the
-     *                first call
+     *                caller-allocated buffer of at least *outSize QSP_CHAR units
      * outBufSize   - size of outBuf in QSP_CHAR units; ignored when outBuf is 0
+     * outSize      - receives the required (call 1) or written (call 2) QSP_CHAR count
+     *                including the null terminator; may be 0 on the second call
      *
-     * Returns the required (call 1) or written (call 2) buffer size in QSP_CHAR
-     * units including the null terminator, or -1 on error. Returns the required
-     * size if outBuf is too small.
+     * Returns T2G_ERROR_NONE on success.
      */
     int t2gTextToStrings(const QSP_CHAR *text, const QSP_CHAR *locStart, const QSP_CHAR *locEnd,
-                         QSP_BOOL toGetQStrings, QSP_CHAR *outBuf, int outBufSize);
+                         QSP_BOOL toGetQStrings, QSP_CHAR *outBuf, int outBufSize, int *outSize);
 
     /*
      * Convert a QSP_CHAR string to a null-terminated UTF-8 string.

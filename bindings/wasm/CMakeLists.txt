@@ -14,7 +14,7 @@ set_target_properties(txt2gam_wasm PROPERTIES
 
 target_link_options(txt2gam_wasm PRIVATE
     "SHELL:--post-js ${CMAKE_CURRENT_SOURCE_DIR}/t2g_wasm.js"
-    "-sEXPORTED_FUNCTIONS=['_t2gInit','_t2gTerminate','_t2gWasmParseTextData','_t2gWasmEncodeTextToGame','_t2gWasmDecodeGameToText','_t2gWasmExtractStrings','_malloc','_free']"
+    "-sEXPORTED_FUNCTIONS=['_t2gInit','_t2gTerminate','_t2gWasmParseTextData','_t2gWasmEncodeTextToGame','_t2gWasmDecodeGameToText','_t2gWasmExtractStrings','_t2gWasmGetLastError','_malloc','_free']"
     "-sEXPORTED_RUNTIME_METHODS=['HEAPU8','HEAP32','lengthBytesUTF16','stringToUTF16']"
     "-sWASM=1"
     "-sALLOW_MEMORY_GROWTH=1"

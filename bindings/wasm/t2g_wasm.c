@@ -7,10 +7,18 @@
 
 #include "t2g_api.h"
 
+static int t2gWasmLastError = T2G_ERROR_NONE;
+
+int t2gWasmGetLastError(void)
+{
+    return t2gWasmLastError;
+}
+
 QSP_CHAR *t2gWasmParseTextData(const char *data, int dataLen, QSP_BOOL isUnicode, int *outLen)
 {
     int len = 0;
-    QSP_CHAR *result = t2gParseTextData(data, dataLen, isUnicode, &len);
+    QSP_CHAR *result = 0;
+    t2gWasmLastError = t2gParseTextData(data, dataLen, isUnicode, &result, &len);
     *outLen = len > 0 ? len - 1 : 0;
     return result;
 }
@@ -19,7 +27,8 @@ char *t2gWasmEncodeTextToGame(const QSP_CHAR *text, const QSP_CHAR *locStart, co
                               QSP_BOOL isOldFormat, QSP_BOOL isUnicode, const QSP_CHAR *password, int *outLen)
 {
     int len = 0;
-    char *result = t2gEncodeTextToGame(text, locStart, locEnd, isOldFormat, isUnicode, password, &len);
+    char *result = 0;
+    t2gWasmLastError = t2gEncodeTextToGame(text, locStart, locEnd, isOldFormat, isUnicode, password, &result, &len);
     *outLen = len;
     return result;
 }
@@ -28,7 +37,8 @@ QSP_CHAR *t2gWasmDecodeGameToText(const char *data, int dataLen, const QSP_CHAR 
                                   const QSP_CHAR *locStart, const QSP_CHAR *locEnd, int *outLen)
 {
     int len = 0;
-    QSP_CHAR *result = t2gDecodeGameToText(data, dataLen, password, locStart, locEnd, &len);
+    QSP_CHAR *result = 0;
+    t2gWasmLastError = t2gDecodeGameToText(data, dataLen, password, locStart, locEnd, &result, &len);
     *outLen = len > 0 ? len - 1 : 0;
     return result;
 }
@@ -37,7 +47,8 @@ QSP_CHAR *t2gWasmExtractStrings(const QSP_CHAR *text, const QSP_CHAR *locStart,
                                 const QSP_CHAR *locEnd, QSP_BOOL toGetQStrings, int *outLen)
 {
     int len = 0;
-    QSP_CHAR *result = t2gExtractStrings(text, locStart, locEnd, toGetQStrings, &len);
+    QSP_CHAR *result = 0;
+    t2gWasmLastError = t2gExtractStrings(text, locStart, locEnd, toGetQStrings, &result, &len);
     *outLen = len > 0 ? len - 1 : 0;
     return result;
 }

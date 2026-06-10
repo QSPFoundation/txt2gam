@@ -39,8 +39,4 @@
         QSP_UTF16
     };
 
-    #define QSP_APPNAME "TXT2GAM"
-    #define QSP_VER QSP_FMT(TXT2GAM_VER_STR)
-    #define QSP_LOCALE "C" /* default locale */
-
 #endif
