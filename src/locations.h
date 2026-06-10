@@ -12,7 +12,6 @@
     #define QSP_LOCSDEFINES
 
     #define QSP_GAMEID QSP_FMT("QSPGAME")
-    #define QSP_PASSWD T2G_PASSWD
     #define QSP_VERINFOSIZE 100
     #define QSP_DATESTRSIZE 32
     #define QSP_MAXACTIONS 50
@@ -39,7 +38,7 @@
     void qspCreateWorld(int locsCount);
     QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd, QSP_BOOL toGetQStrings);
     int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd);
-    char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUnicode, QSP_CHAR *passwd, int *dataLen);
+    char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUnicode, QSP_CHAR *password, int *dataLen);
     int qspOpenQuest(char *data, int dataSize, QSP_CHAR *password);
     QSP_CHAR *qspSaveQuestAsText(QSP_CHAR *locStart, QSP_CHAR *locEnd);
 

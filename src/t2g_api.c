@@ -116,7 +116,6 @@ int t2gEncodeTextToGame(const QSP_CHAR *text, const QSP_CHAR *locStart, const QS
 {
     int len;
     char *gameData;
-    QSP_CHAR *qspLocStart, *qspLocEnd, *qspPassword;
     QSP_CHAR *textData, *textNorm = 0;
     if (!outData) return T2G_ERROR_FAILED;
     *outData = 0;
@@ -128,16 +127,10 @@ int t2gEncodeTextToGame(const QSP_CHAR *text, const QSP_CHAR *locStart, const QS
         qspFormatLineEndings(textNorm);
         textData = textNorm;
     }
-    qspLocStart = locStart ? qspNewStr((QSP_CHAR *)locStart) : qspNewStr(T2G_STARTLOC);
-    qspLocEnd   = locEnd   ? qspNewStr((QSP_CHAR *)locEnd)   : qspNewStr(T2G_ENDLOC);
-    qspPassword = password ? qspNewStr((QSP_CHAR *)password) : qspNewStr(QSP_PASSWD);
     qspCreateWorld(0);
-    qspOpenTextData(textData, qspLocStart, qspLocEnd);
-    gameData = qspSaveQuest(isOldFormat, isUnicode, qspPassword, &len);
+    qspOpenTextData(textData, (QSP_CHAR *)locStart, (QSP_CHAR *)locEnd);
+    gameData = qspSaveQuest(isOldFormat, isUnicode, (QSP_CHAR *)password, &len);
     if (textNorm) free(textNorm);
-    free(qspLocStart);
-    free(qspLocEnd);
-    free(qspPassword);
     qspCreateWorld(0);
     qspLocs = 0;
     if (!gameData) return T2G_ERROR_FAILED;
@@ -151,19 +144,13 @@ int t2gDecodeGameToText(const char *data, int dataLen, const QSP_CHAR *password,
                         QSP_CHAR **outText, int *outLen)
 {
     int err;
-    QSP_CHAR *questText, *qspLocStart, *qspLocEnd, *qspPassword;
+    QSP_CHAR *questText;
     if (!outText) return T2G_ERROR_FAILED;
     *outText = 0;
     if (!data || dataLen <= 0) return T2G_ERROR_INVALID_DATA;
-    qspPassword = password ? qspNewStr((QSP_CHAR *)password) : qspNewStr(QSP_PASSWD);
-    err = qspOpenQuest((char *)data, dataLen, qspPassword);
-    free(qspPassword);
+    err = qspOpenQuest((char *)data, dataLen, (QSP_CHAR *)password);
     if (err != T2G_ERROR_NONE) return err;
-    qspLocStart = locStart ? qspNewStr((QSP_CHAR *)locStart) : qspNewStr(T2G_STARTLOC);
-    qspLocEnd   = locEnd   ? qspNewStr((QSP_CHAR *)locEnd)   : qspNewStr(T2G_ENDLOC);
-    questText = qspSaveQuestAsText(qspLocStart, qspLocEnd);
-    free(qspLocStart);
-    free(qspLocEnd);
+    questText = qspSaveQuestAsText((QSP_CHAR *)locStart, (QSP_CHAR *)locEnd);
     qspCreateWorld(0);
     qspLocs = 0;
     if (!questText) return T2G_ERROR_FAILED;
@@ -176,7 +163,7 @@ int t2gExtractStrings(const QSP_CHAR *text, const QSP_CHAR *locStart,
                       const QSP_CHAR *locEnd, QSP_BOOL toGetQStrings,
                       QSP_CHAR **outText, int *outLen)
 {
-    QSP_CHAR *textData, *qspLocStart, *qspLocEnd, *result, *textNorm = 0;
+    QSP_CHAR *textData, *result, *textNorm = 0;
     if (!outText) return T2G_ERROR_FAILED;
     *outText = 0;
     if (!text) return T2G_ERROR_INVALID_DATA;
@@ -187,12 +174,8 @@ int t2gExtractStrings(const QSP_CHAR *text, const QSP_CHAR *locStart,
         qspFormatLineEndings(textNorm);
         textData = textNorm;
     }
-    qspLocStart = locStart ? qspNewStr((QSP_CHAR *)locStart) : qspNewStr(T2G_STARTLOC);
-    qspLocEnd   = locEnd   ? qspNewStr((QSP_CHAR *)locEnd)   : qspNewStr(T2G_ENDLOC);
-    result = qspGetLocsStrings(textData, qspLocStart, qspLocEnd, toGetQStrings);
+    result = qspGetLocsStrings(textData, (QSP_CHAR *)locStart, (QSP_CHAR *)locEnd, toGetQStrings);
     if (textNorm) free(textNorm);
-    free(qspLocStart);
-    free(qspLocEnd);
     /* qspGetLocsStrings returns 0 when no strings are found; expose that as an
      * empty (but allocated) string so 0 strictly means an error. */
     if (!result) result = qspNewStr(QSP_FMT(""));

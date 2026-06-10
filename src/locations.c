@@ -31,13 +31,16 @@ static int qspCheckQuest(QSPGameSeg *strs, int count, QSP_BOOL isUnicode, QSP_CH
 {
     int i, ind, locsCount, actsCount;
     QSP_BOOL isOldFormat, hasInvalidPassword;
-    QSP_CHAR *buf = qspSegToStr(strs[0], isUnicode, QSP_FALSE);
+    QSP_CHAR *buf;
+    if (!password) password = T2G_PASSWD;
+
+    buf = qspSegToStr(strs[0], isUnicode, QSP_FALSE);
     isOldFormat = qspStrsComp(buf, QSP_GAMEID) != 0;
     free(buf);
     ind = (isOldFormat ? 30 : 4);
     if (ind > count) return T2G_ERROR_INVALID_DATA;
     buf = (isOldFormat ? qspSegToStr(strs[1], isUnicode, QSP_TRUE) : qspSegToStr(strs[2], isUnicode, QSP_TRUE));
-    hasInvalidPassword = qspStrsComp(buf, password);
+    hasInvalidPassword = qspStrsComp(buf, T2G_PASSWD) && qspStrsComp(buf, password);
     free(buf);
 #ifdef SPEC_PASS
     hasInvalidPassword = hasInvalidPassword && qspStrsComp(QSP_FMT(SPEC_PASS), password);
@@ -100,6 +103,9 @@ QSP_CHAR *qspGetLocsStrings(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd
     QSP_CHAR *name, *curStr, *pos, *res = 0, quot = 0;
     int locStartLen, locEndLen, curBufSize = 1024, curStrLen = 0, resLen = 0, quotsCount = 0, strsCount = 0, locsCount = 0;
     QSP_BOOL isInLoc = QSP_FALSE;
+    if (!locStart) locStart = T2G_STARTLOC;
+    if (!locEnd) locEnd = T2G_ENDLOC;
+
     locStartLen = qspStrLen(locStart);
     locEndLen = qspStrLen(locEnd);
     curStr = qspAllocateBuffer(curBufSize);
@@ -211,6 +217,9 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd)
     QSP_CHAR *locCode, *pos, quot = 0;
     int locStartLen, locEndLen, locBufSize = 1024, locCodeLen = 0, quotsCount = 0, curLoc = 0, locCapacity = qspLocsCount;
     QSP_BOOL isNewLine = QSP_TRUE, isInLoc = QSP_FALSE, isInBaseSection = QSP_FALSE, isInBaseAction = QSP_FALSE;
+    if (!locStart) locStart = T2G_STARTLOC;
+    if (!locEnd) locEnd = T2G_ENDLOC;
+
     locStartLen = qspStrLen(locStart);
     locEndLen = qspStrLen(locEnd);
     locCode = qspAllocateBuffer(locBufSize);
@@ -414,7 +423,7 @@ int qspOpenTextData(QSP_CHAR *data, QSP_CHAR *locStart, QSP_CHAR *locEnd)
     return curLoc;
 }
 
-char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUnicode, QSP_CHAR *passwd, int *dataLen)
+char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUnicode, QSP_CHAR *password, int *dataLen)
 {
     QSP_CHAR *verInfo;
     char narrowInfo[QSP_VERINFOSIZE], dateBuf[QSP_DATESTRSIZE];
@@ -422,6 +431,7 @@ char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUnicode, QSP_CHAR *passwd, i
     time_t currentTime;
     struct tm *localTime;
     char *buf = 0;
+    if (!password) password = T2G_PASSWD;
 
     time(&currentTime);
     localTime = localtime(&currentTime);
@@ -432,7 +442,7 @@ char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUnicode, QSP_CHAR *passwd, i
     if (isOldFormat)
     {
         len = qspGameCodeWriteIntValLine(&buf, 0, qspLocsCount, isUnicode, QSP_FALSE);
-        len = qspGameCodeWriteValLine(&buf, len, passwd, isUnicode, QSP_TRUE);
+        len = qspGameCodeWriteValLine(&buf, len, password, isUnicode, QSP_TRUE);
         len = qspGameCodeWriteValLine(&buf, len, verInfo, isUnicode, QSP_FALSE);
         for (i = 0; i < 27; ++i) len = qspGameCodeWriteValLine(&buf, len, 0, isUnicode, QSP_FALSE);
     }
@@ -440,7 +450,7 @@ char *qspSaveQuest(QSP_BOOL isOldFormat, QSP_BOOL isUnicode, QSP_CHAR *passwd, i
     {
         len = qspGameCodeWriteValLine(&buf, 0, QSP_GAMEID, isUnicode, QSP_FALSE);
         len = qspGameCodeWriteValLine(&buf, len, verInfo, isUnicode, QSP_FALSE);
-        len = qspGameCodeWriteValLine(&buf, len, passwd, isUnicode, QSP_TRUE);
+        len = qspGameCodeWriteValLine(&buf, len, password, isUnicode, QSP_TRUE);
         len = qspGameCodeWriteIntValLine(&buf, len, qspLocsCount, isUnicode, QSP_TRUE);
     }
     for (i = 0; i < qspLocsCount; ++i)
@@ -555,6 +565,9 @@ QSP_CHAR *qspSaveQuestAsText(QSP_CHAR *locStart, QSP_CHAR *locEnd)
     int i, j, k, baseActsCount, linesCount, len = 0, bufSize = 4096;
     QSP_CHAR **lines;
     QSP_CHAR *temp, *buf = qspAllocateBuffer(bufSize);
+    if (!locStart) locStart = T2G_STARTLOC;
+    if (!locEnd) locEnd = T2G_ENDLOC;
+
     for (i = 0; i < qspLocsCount; ++i)
     {
         t2gPrint("Saving location: %S\n", qspLocs[i].Name);
